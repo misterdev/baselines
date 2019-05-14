@@ -86,7 +86,7 @@ def train(config):
                                   "policies_to_train": list(policy_graphs.keys())}
     agent_config["horizon"] = 50
 
-    ppo_trainer = PPOAgent(env=f"railenv_", config=agent_config)
+    ppo_trainer = PPOAgent(env=f"railenv", config=agent_config)
 
     for i in range(100000 + 2):
         print("== Iteration", i, "==")
