@@ -1,5 +1,6 @@
 run_grid_search.name = "n_agents_results"
 run_grid_search.num_iterations = 1002
+run_grid_search.save_every = 200
 run_grid_search.hidden_sizes = [32, 32]
 
 run_grid_search.map_width = 15

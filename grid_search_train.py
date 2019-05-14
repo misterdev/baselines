@@ -119,6 +119,6 @@ def run_grid_search(name, num_iterations, n_agents, hidden_sizes, save_every,
 
 if __name__ == '__main__':
     gin.external_configurable(tune.grid_search)
-    dir = 'grid_search_configs/n_agents_grid_search'
+    dir = 'baselines/grid_search_configs/n_agents_grid_search'
     gin.parse_config_file(dir + '/config.gin')
     run_grid_search(local_dir=dir)
