@@ -64,9 +64,9 @@ def train(config):
                   rail_generator=random_rail_generator(cell_type_relative_proportion=transition_probability),
                   number_of_agents=1)
     """
-    env = RailEnv(width=50,
-                  height=50,
-                  rail_generator=complex_rail_generator(nr_start_goal=50, min_dist=5, max_dist=99999, seed=0),
+    env = RailEnvRLLibWrapper(width=20,
+                  height=20,
+                  rail_generator=complex_rail_generator(nr_start_goal=5, min_dist=5, max_dist=99999, seed=0),
                   number_of_agents=5)
     """
     env = RailEnv(width=20,
@@ -94,11 +94,18 @@ def train(config):
         return f"ppo_policy"
 
     agent_config = ppo.DEFAULT_CONFIG.copy()
-    agent_config['model'] = {"fcnet_hiddens": [32, 32], "custom_preprocessor": "my_prep"}
+    agent_config['model'] = {"fcnet_hiddens": [32, 32]}#, "custom_preprocessor": "my_prep"}
     agent_config['multiagent'] = {"policy_graphs": policy_graphs,
                                   "policy_mapping_fn": policy_mapping_fn,
                                   "policies_to_train": list(policy_graphs.keys())}
     agent_config["horizon"] = 50
+    #agent_config["num_workers"] = 0
+    #agent_config["num_cpus_per_worker"] = 40
+    #agent_config["num_gpus"] = 2.0
+   # agent_config["num_gpus_per_worker"] = 2.0
+    agent_config["num_cpus_for_driver"] = 5
+    agent_config["num_envs_per_worker"] = 15
+    #agent_config["batch_mode"] = "complete_episodes"
 
     ppo_trainer = PPOAgent(env=f"railenv", config=agent_config)
 

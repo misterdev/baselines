@@ -13,8 +13,8 @@ class RailEnvRLLibWrapper(RailEnv, MultiAgentEnv):
                  number_of_agents=1,
                  obs_builder_object=TreeObsForRailEnv(max_depth=2)):
 
-        super(RailEnvRLLibWrapper, self).__init__(width, height, rail_generator,
-                                      number_of_agents, obs_builder_object)
+        super(RailEnvRLLibWrapper, self).__init__(width=width, height=height, rail_generator=rail_generator,
+                number_of_agents=number_of_agents, obs_builder_object=obs_builder_object)
 
     def reset(self, regen_rail=True, replace_agents=True):
         self.agents_done = []
@@ -32,17 +32,16 @@ class RailEnvRLLibWrapper(RailEnv, MultiAgentEnv):
                 if agent != '__all__':
                     o[agent] = obs[agent]
                     r[agent] = rewards[agent]
-
+    
                 d[agent] = dones[agent]
-                # obs.pop(agent_done)
-                # rewards.pop(agent_done)
-                # dones.pop(agent_done)
 
         for agent, done in dones.items():
             if done and agent != '__all__':
                 self.agents_done.append(agent)
-
+        
+        #print(obs)
+        #return obs, rewards, dones, infos
         return o, r, d, infos
-
+    
     def get_agent_handles(self):
         return super(RailEnvRLLibWrapper, self).get_agent_handles()
