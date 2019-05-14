@@ -3,9 +3,9 @@ run_grid_search.num_iterations = 1002
 run_grid_search.save_every = 200
 run_grid_search.hidden_sizes = [32, 32]
 
-run_grid_search.map_width = 15
-run_grid_search.map_height = 15
-run_grid_search.n_agents = {"grid_search": [1, 2, 3, 4]}
+run_grid_search.map_width = 50
+run_grid_search.map_height = 50
+run_grid_search.n_agents = {"grid_search": [2, 5, 10, 20]}
 
 run_grid_search.horizon = 50
 
