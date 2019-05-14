@@ -6,15 +6,15 @@ from flatland.envs.generators import random_rail_generator
 
 class RailEnvRLLibWrapper(RailEnv, MultiAgentEnv):
 
-    def __init__(self,
-                 width,
-                 height,
-                 rail_generator=random_rail_generator(),
-                 number_of_agents=1,
-                 obs_builder_object=TreeObsForRailEnv(max_depth=2)):
+    def __init__(self, config):
+                 # width,
+                 # height,
+                 # rail_generator=random_rail_generator(),
+                 # number_of_agents=1,
+                 # obs_builder_object=TreeObsForRailEnv(max_depth=2)):
 
-        super(RailEnvRLLibWrapper, self).__init__(width=width, height=height, rail_generator=rail_generator,
-                number_of_agents=number_of_agents, obs_builder_object=obs_builder_object)
+        super(RailEnvRLLibWrapper, self).__init__(width=config["width"], height=config["height"], rail_generator=config["rail_generator"],
+                number_of_agents=config["number_of_agents"])
 
     def reset(self, regen_rail=True, replace_agents=True):
         self.agents_done = []
