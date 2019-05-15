@@ -10,28 +10,22 @@ from ray.rllib.agents.ppo.ppo_policy_graph import PPOPolicyGraph
 
 from ray.rllib.models import ModelCatalog
 from ray.tune.logger import pretty_print
-from ray.rllib.models.preprocessors import Preprocessor
+from baselines.CustomPreprocessor import CustomPreprocessor
 
 
 import ray
 import numpy as np
+
+from ray.tune.logger import UnifiedLogger
+import tempfile
 
 import gin
 
 from ray import tune
 
 
-class MyPreprocessorClass(Preprocessor):
-    def _init_shape(self, obs_space, options):
-        return (105,)
-
-    def transform(self, observation):
-        return observation  # return the preprocessed observation
-
-
-ModelCatalog.register_custom_preprocessor("my_prep", MyPreprocessorClass)
-ray.init()
-
+ModelCatalog.register_custom_preprocessor("my_prep", CustomPreprocessor)
+ray.init(object_store_memory=150000000000)
 
 def train(config, reporter):
     print('Init Env')
@@ -57,7 +51,7 @@ def train(config, reporter):
     """
     env_config = {"width":config['map_width'],
                   "height":config['map_height'],
-                  "rail_generator":complex_rail_generator(nr_start_goal=50, min_dist=5, max_dist=99999, seed=0),
+                  "rail_generator":complex_rail_generator(nr_start_goal=config['n_agents'], min_dist=5, max_dist=99999, seed=0),
                   "number_of_agents":config['n_agents']}
     """
     env = RailEnv(width=20,
@@ -80,11 +74,11 @@ def train(config, reporter):
 
     # Dict with the different policies to train
     policy_graphs = {
-        f"ppo_policy": (PPOPolicyGraph, obs_space, act_space, {})
+        config['policy_folder_name'].format(**locals()): (PPOPolicyGraph, obs_space, act_space, {})
     }
 
     def policy_mapping_fn(agent_id):
-        return f"ppo_policy"
+        return config['policy_folder_name'].format(**locals())
 
     agent_config = ppo.DEFAULT_CONFIG.copy()
     agent_config['model'] = {"fcnet_hiddens": config['hidden_sizes'], "custom_preprocessor": "my_prep"}
@@ -93,16 +87,29 @@ def train(config, reporter):
                                   "policies_to_train": list(policy_graphs.keys())}
     agent_config["horizon"] = config['horizon']
 
-    # agent_config["num_workers"] = 0
-    # agent_config["num_cpus_per_worker"] = 10
-    # agent_config["num_gpus"] = 0.5
-    # agent_config["num_gpus_per_worker"] = 0.5
-    # agent_config["num_cpus_for_driver"] = 1
-    # agent_config["num_envs_per_worker"] = 10
+    agent_config["num_workers"] = 0
+    agent_config["num_cpus_per_worker"] = 10
+    agent_config["num_gpus"] = 0.5
+    agent_config["num_gpus_per_worker"] = 0.5
+    agent_config["num_cpus_for_driver"] = 2
+    agent_config["num_envs_per_worker"] = 10
     agent_config["env_config"] = env_config
     agent_config["batch_mode"] = "complete_episodes"
+    agent_config['simple_optimizer'] = False
 
-    ppo_trainer = PPOTrainer(env=RailEnvRLLibWrapper, config=agent_config)
+    def logger_creator(conf):
+        """Creates a Unified logger with a default logdir prefix
+        containing the agent name and the env id
+        """
+        print("FOLDER", config['policy_folder_name'])
+        logdir = config['policy_folder_name'].format(**locals())
+        logdir = tempfile.mkdtemp(
+            prefix=logdir, dir=config['local_dir'])
+        return UnifiedLogger(conf, logdir, None)
+
+    logger = logger_creator
+
+    ppo_trainer = PPOTrainer(env=RailEnvRLLibWrapper, config=agent_config, logger_creator=logger)
 
     for i in range(100000 + 2):
         print("== Iteration", i, "==")
@@ -119,7 +126,7 @@ def train(config, reporter):
 
 @gin.configurable
 def run_grid_search(name, num_iterations, n_agents, hidden_sizes, save_every,
-                    map_width, map_height, horizon, local_dir):
+                    map_width, map_height, horizon, policy_folder_name, local_dir):
 
     tune.run(
         train,
@@ -131,10 +138,11 @@ def run_grid_search(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "map_width": map_width,
                 "map_height": map_height,
                 "local_dir": local_dir,
-                "horizon": horizon  # Max number of time steps
+                "horizon": horizon,  # Max number of time steps
+                'policy_folder_name': policy_folder_name
                 },
         resources_per_trial={
-            "cpu": 11,
+            "cpu": 12,
             "gpu": 0.5
         },
         local_dir=local_dir
@@ -143,6 +151,6 @@ def run_grid_search(name, num_iterations, n_agents, hidden_sizes, save_every,
 
 if __name__ == '__main__':
     gin.external_configurable(tune.grid_search)
-    dir = 'baselines/grid_search_configs/n_agents_grid_search'
+    dir = '/mount/SDC/flatland/baselines/grid_search_configs/n_agents_grid_search'
     gin.parse_config_file(dir + '/config.gin')
     run_grid_search(local_dir=dir)

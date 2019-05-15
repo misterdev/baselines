@@ -19,7 +19,7 @@ from ray.rllib.agents.dqn.dqn_policy_graph import DQNPolicyGraph
 from ray.tune.registry import register_env
 from ray.rllib.models import ModelCatalog
 from ray.tune.logger import pretty_print
-from ray.rllib.models.preprocessors import Preprocessor
+from baselines.CustomPreprocessor import CustomPreprocessor
 
 
 import ray
@@ -30,14 +30,8 @@ from ray.rllib.env.multi_agent_env import MultiAgentEnv
 # RailEnv.__bases__ = (RailEnv.__bases__[0], MultiAgentEnv)
 
 
-class MyPreprocessorClass(Preprocessor):
-    def _init_shape(self, obs_space, options):
-        return (105,)
 
-    def transform(self, observation):
-        return observation  # return the preprocessed observation
-
-ModelCatalog.register_custom_preprocessor("my_prep", MyPreprocessorClass)
+ModelCatalog.register_custom_preprocessor("my_prep", CustomPreprocessor)
 ray.init()
 
 def train(config):
@@ -93,19 +87,20 @@ def train(config):
         return f"ppo_policy"
 
     agent_config = ppo.DEFAULT_CONFIG.copy()
-    agent_config['model'] = {"fcnet_hiddens": [32, 32]}#, "custom_preprocessor": "my_prep"}
+    agent_config['model'] = {"fcnet_hiddens": [32, 32], "custom_preprocessor": "my_prep"}
     agent_config['multiagent'] = {"policy_graphs": policy_graphs,
                                   "policy_mapping_fn": policy_mapping_fn,
                                   "policies_to_train": list(policy_graphs.keys())}
     agent_config["horizon"] = 50
-    #agent_config["num_workers"] = 0
+    agent_config["num_workers"] = 0
+    # agent_config["sample_batch_size"]: 1000
     #agent_config["num_cpus_per_worker"] = 40
     #agent_config["num_gpus"] = 2.0
     #agent_config["num_gpus_per_worker"] = 2.0
     #agent_config["num_cpus_for_driver"] = 5
     #agent_config["num_envs_per_worker"] = 15
     agent_config["env_config"] = env_config
-    agent_config["batch_mode"] = "complete_episodes"
+    #agent_config["batch_mode"] = "complete_episodes"
 
     ppo_trainer = PPOTrainer(env=RailEnvRLLibWrapper, config=agent_config)
 

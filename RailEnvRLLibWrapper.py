@@ -4,7 +4,7 @@ from flatland.core.env_observation_builder import TreeObsForRailEnv
 from flatland.envs.generators import random_rail_generator
 
 
-class RailEnvRLLibWrapper(RailEnv, MultiAgentEnv):
+class RailEnvRLLibWrapper(MultiAgentEnv):
 
     def __init__(self, config):
                  # width,
@@ -12,16 +12,19 @@ class RailEnvRLLibWrapper(RailEnv, MultiAgentEnv):
                  # rail_generator=random_rail_generator(),
                  # number_of_agents=1,
                  # obs_builder_object=TreeObsForRailEnv(max_depth=2)):
+        super(MultiAgentEnv, self).__init__()
 
-        super(RailEnvRLLibWrapper, self).__init__(width=config["width"], height=config["height"], rail_generator=config["rail_generator"],
+        self.env = RailEnv(width=config["width"], height=config["height"], rail_generator=config["rail_generator"],
                 number_of_agents=config["number_of_agents"])
 
-    def reset(self, regen_rail=True, replace_agents=True):
+    def reset(self):
         self.agents_done = []
-        return super(RailEnvRLLibWrapper, self).reset(regen_rail, replace_agents)
+        return self.env.reset()
 
     def step(self, action_dict):
-        obs, rewards, dones, infos = super(RailEnvRLLibWrapper, self).step(action_dict)
+        obs, rewards, dones, infos = self.env.step(action_dict)
+        # print(obs)
+
         d = dict()
         r = dict()
         o = dict()
@@ -44,4 +47,4 @@ class RailEnvRLLibWrapper(RailEnv, MultiAgentEnv):
         return o, r, d, infos
     
     def get_agent_handles(self):
-        return super(RailEnvRLLibWrapper, self).get_agent_handles()
+        return self.env.get_agent_handles()
