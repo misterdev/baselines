@@ -24,14 +24,16 @@ import tempfile
 import gin
 
 from ray import tune
-
+from ray.rllib.utils.seed import seed as set_seed
 
 ModelCatalog.register_custom_preprocessor("my_prep", CustomPreprocessor)
-ray.init(object_store_memory=150000000000)
+ray.init()
 
 
 def train(config, reporter):
     print('Init Env')
+
+    set_seed(config['seed'], config['seed'], config['seed'])
 
     transition_probability = [15,  # empty cell - Case 0
                               5,  # Case 1 - straight
@@ -46,10 +48,11 @@ def train(config, reporter):
                               1]  # Case 2b (10) - simple switch mirrored
 
     # Example configuration to generate a random rail
-    env_config = {"width":config['map_width'],
-                  "height":config['map_height'],
-                  "rail_generator":complex_rail_generator(nr_start_goal=config['n_agents'], min_dist=5, max_dist=99999, seed=0),
-                  "number_of_agents":config['n_agents']}
+    env_config = {"width": config['map_width'],
+                  "height": config['map_height'],
+                  "rail_generator": complex_rail_generator,
+                  "number_of_agents": config['n_agents'],
+                  "seed": config['seed']}
 
     # Observation space and action space definitions
     obs_space = gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(105,))
@@ -73,11 +76,11 @@ def train(config, reporter):
     trainer_config["horizon"] = config['horizon']
 
     trainer_config["num_workers"] = 0
-    trainer_config["num_cpus_per_worker"] = 10
-    trainer_config["num_gpus"] = 0.5
-    trainer_config["num_gpus_per_worker"] = 0.5
-    trainer_config["num_cpus_for_driver"] = 2
-    trainer_config["num_envs_per_worker"] = 10
+    trainer_config["num_cpus_per_worker"] = 1
+    trainer_config["num_gpus"] = 0.0
+    trainer_config["num_gpus_per_worker"] = 0
+    trainer_config["num_cpus_for_driver"] = 1
+    trainer_config["num_envs_per_worker"] = 1
     trainer_config["env_config"] = env_config
     trainer_config["batch_mode"] = "complete_episodes"
     trainer_config['simple_optimizer'] = False
@@ -108,8 +111,8 @@ def train(config, reporter):
 
 
 @gin.configurable
-def run_grid_search(name, num_iterations, n_agents, hidden_sizes, save_every,
-                    map_width, map_height, horizon, policy_folder_name, local_dir):
+def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
+                    map_width, map_height, horizon, policy_folder_name, local_dir, seed):
 
     tune.run(
         train,
@@ -122,11 +125,12 @@ def run_grid_search(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "map_height": map_height,
                 "local_dir": local_dir,
                 "horizon": horizon,  # Max number of time steps
-                'policy_folder_name': policy_folder_name
+                'policy_folder_name': policy_folder_name,
+                "seed": seed
                 },
         resources_per_trial={
-            "cpu": 12,
-            "gpu": 0.5
+            "cpu": 1,
+            "gpu": 0.0
         },
         local_dir=local_dir
     )
@@ -134,6 +138,6 @@ def run_grid_search(name, num_iterations, n_agents, hidden_sizes, save_every,
 
 if __name__ == '__main__':
     gin.external_configurable(tune.grid_search)
-    dir = '/mount/SDC/flatland/baselines/grid_search_configs/n_agents_grid_search'  # To Modify
+    dir = '/home/guillaume/Desktop/distMAgent/baselines/experiment_configs/n_agents_experiment'  # To Modify
     gin.parse_config_file(dir + '/config.gin')
-    run_grid_search(local_dir=dir)
+    run_experiment(local_dir=dir)

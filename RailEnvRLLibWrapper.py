@@ -2,7 +2,7 @@ from flatland.envs.rail_env import RailEnv
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 from flatland.core.env_observation_builder import TreeObsForRailEnv
 from flatland.envs.generators import random_rail_generator
-
+from ray.rllib.utils.seed import seed as set_seed
 
 class RailEnvRLLibWrapper(MultiAgentEnv):
 
@@ -13,8 +13,10 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
                  # number_of_agents=1,
                  # obs_builder_object=TreeObsForRailEnv(max_depth=2)):
         super(MultiAgentEnv, self).__init__()
-
-        self.env = RailEnv(width=config["width"], height=config["height"], rail_generator=config["rail_generator"],
+        self.rail_generator = config["rail_generator"](nr_start_goal=config['number_of_agents'], min_dist=5,
+                                                       seed=config['seed'] * (1+config.vector_index))
+        set_seed(config['seed'] * (1+config.vector_index))
+        self.env = RailEnv(width=config["width"], height=config["height"], rail_generator=self.rail_generator,
                 number_of_agents=config["number_of_agents"])
 
     def reset(self):
