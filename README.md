@@ -4,8 +4,8 @@ It should be clone inside the main flatland repository.
 
 ## Installation:
 ```sh
-    $pip install ray
-    $pip install gin-config
+pip install ray
+pip install gin-config
 ```
 
 To start a grid search on some parameters, you can create a folder containing a config.gin file (see example in `grid_search_configs/n_agents_grid_search/config.gin`.
