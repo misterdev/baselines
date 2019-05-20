@@ -13,7 +13,7 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
                  # number_of_agents=1,
                  # obs_builder_object=TreeObsForRailEnv(max_depth=2)):
         super(MultiAgentEnv, self).__init__()
-        self.rail_generator = config["rail_generator"](nr_start_goal=config['number_of_agents'], min_dist=5,
+        self.rail_generator = config["rail_generator"](nr_start_goal=config['number_of_agents'], min_dist=5, nr_extra=30,
                                                        seed=config['seed'] * (1+config.vector_index))
         set_seed(config['seed'] * (1+config.vector_index))
         self.env = RailEnv(width=config["width"], height=config["height"], rail_generator=self.rail_generator,

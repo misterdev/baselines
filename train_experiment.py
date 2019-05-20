@@ -34,7 +34,7 @@ from ray.rllib.models.preprocessors import TupleFlatteningPreprocessor
 
 ModelCatalog.register_custom_preprocessor("tree_obs_prep", CustomPreprocessor)
 ModelCatalog.register_custom_preprocessor("global_obs_prep", TupleFlatteningPreprocessor)
-ray.init()
+ray.init(object_store_memory=150000000000, redis_max_memory=30000000000)
 
 
 def train(config, reporter):
@@ -101,7 +101,7 @@ def train(config, reporter):
     trainer_config["horizon"] = config['horizon']
 
     trainer_config["num_workers"] = 0
-    trainer_config["num_cpus_per_worker"] = 8
+    trainer_config["num_cpus_per_worker"] = 10
     trainer_config["num_gpus"] = 0.5
     trainer_config["num_gpus_per_worker"] = 0.5
     trainer_config["num_cpus_for_driver"] = 2
@@ -155,7 +155,7 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "seed": seed
                 },
         resources_per_trial={
-            "cpu": 10,
+            "cpu": 12,
             "gpu": 0.5
         },
         local_dir=local_dir

@@ -1,6 +1,6 @@
 run_experiment.name = "observation_benchmark_results"
 run_experiment.num_iterations = 1002
-run_experiment.save_every = 200
+run_experiment.save_every = 100
 run_experiment.hidden_sizes = [32, 32]
 
 run_experiment.map_width = 20
