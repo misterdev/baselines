@@ -27,9 +27,13 @@ from ray import tune
 
 from ray.rllib.utils.seed import seed as set_seed
 from flatland.envs.observations import TreeObsForRailEnv, GlobalObsForRailEnv
+gin.external_configurable(TreeObsForRailEnv)
+gin.external_configurable(GlobalObsForRailEnv)
+
 from ray.rllib.models.preprocessors import TupleFlatteningPreprocessor
 
 ModelCatalog.register_custom_preprocessor("tree_obs_prep", CustomPreprocessor)
+ModelCatalog.register_custom_preprocessor("global_obs_prep", TupleFlatteningPreprocessor)
 ray.init()
 
 
@@ -55,20 +59,23 @@ def train(config, reporter):
                   "height": config['map_height'],
                   "rail_generator": complex_rail_generator,
                   "number_of_agents": config['n_agents'],
-                  "seed": config['seed']}
+                  "seed": config['seed'],
+                  "obs_builder": config['obs_builder']}
 
+    print(config["obs_builder"])
+    print(config["obs_builder"].__class__)
+    print(type(TreeObsForRailEnv))
     # Observation space and action space definitions
-    if type(config["obs_builder"]) == TreeObsForRailEnv:
+    if isinstance(config["obs_builder"], TreeObsForRailEnv):
         obs_space = gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(105,))
         preprocessor = "tree_obs_prep"
 
-    elif type(config["obs_builder"]) == GlobalObsForRailEnv:
+    elif isinstance(config["obs_builder"], GlobalObsForRailEnv):
         obs_space = gym.spaces.Tuple((
             gym.spaces.Box(low=0, high=1, shape=(config['map_height'], config['map_width'], 16)),
             gym.spaces.Box(low=0, high=1, shape=(4, config['map_height'], config['map_width'])),
-            gym.spaces.Space(4)))
-
-        preprocessor = TupleFlatteningPreprocessor
+            gym.spaces.Box(low=0, high=1, shape=(4,))))
+        preprocessor = "global_obs_prep"
 
     else:
         raise ValueError("Undefined observation space")
@@ -94,11 +101,11 @@ def train(config, reporter):
     trainer_config["horizon"] = config['horizon']
 
     trainer_config["num_workers"] = 0
-    trainer_config["num_cpus_per_worker"] = 1
-    trainer_config["num_gpus"] = 0.0
-    trainer_config["num_gpus_per_worker"] = 0
-    trainer_config["num_cpus_for_driver"] = 1
-    trainer_config["num_envs_per_worker"] = 1
+    trainer_config["num_cpus_per_worker"] = 8
+    trainer_config["num_gpus"] = 0.5
+    trainer_config["num_gpus_per_worker"] = 0.5
+    trainer_config["num_cpus_for_driver"] = 2
+    trainer_config["num_envs_per_worker"] = 10
     trainer_config["env_config"] = env_config
     trainer_config["batch_mode"] = "complete_episodes"
     trainer_config['simple_optimizer'] = False
@@ -130,7 +137,7 @@ def train(config, reporter):
 
 @gin.configurable
 def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
-                    map_width, map_height, horizon, policy_folder_name, local_dir, seed):
+                    map_width, map_height, horizon, policy_folder_name, local_dir, obs_builder, seed):
 
     tune.run(
         train,
@@ -144,10 +151,11 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "local_dir": local_dir,
                 "horizon": horizon,  # Max number of time steps
                 'policy_folder_name': policy_folder_name,
+                "obs_builder": obs_builder,
                 "seed": seed
                 },
         resources_per_trial={
-            "cpu": 12,
+            "cpu": 10,
             "gpu": 0.5
         },
         local_dir=local_dir
