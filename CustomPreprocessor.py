@@ -54,3 +54,11 @@ class CustomPreprocessor(Preprocessor):
 
     def transform(self, observation):
         return norm_obs_clip(observation)  # return the preprocessed observation
+
+
+
+# class NoPreprocessor:
+#     def _init_shape(self, obs_space, options):
+#         num_features = 0
+#         for space in obs_space:
+

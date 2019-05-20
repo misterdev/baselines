@@ -24,9 +24,12 @@ import tempfile
 import gin
 
 from ray import tune
-from ray.rllib.utils.seed import seed as set_seed
 
-ModelCatalog.register_custom_preprocessor("my_prep", CustomPreprocessor)
+from ray.rllib.utils.seed import seed as set_seed
+from flatland.envs.observations import TreeObsForRailEnv, GlobalObsForRailEnv
+from ray.rllib.models.preprocessors import TupleFlatteningPreprocessor
+
+ModelCatalog.register_custom_preprocessor("tree_obs_prep", CustomPreprocessor)
 ray.init()
 
 
@@ -55,7 +58,22 @@ def train(config, reporter):
                   "seed": config['seed']}
 
     # Observation space and action space definitions
-    obs_space = gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(105,))
+    if type(config["obs_builder"]) == TreeObsForRailEnv:
+        obs_space = gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(105,))
+        preprocessor = "tree_obs_prep"
+
+    elif type(config["obs_builder"]) == GlobalObsForRailEnv:
+        obs_space = gym.spaces.Tuple((
+            gym.spaces.Box(low=0, high=1, shape=(config['map_height'], config['map_width'], 16)),
+            gym.spaces.Box(low=0, high=1, shape=(4, config['map_height'], config['map_width'])),
+            gym.spaces.Space(4)))
+
+        preprocessor = TupleFlatteningPreprocessor
+
+    else:
+        raise ValueError("Undefined observation space")
+
+
     act_space = gym.spaces.Discrete(4)
 
     # Dict with the different policies to train
@@ -69,7 +87,7 @@ def train(config, reporter):
 
     # Trainer configuration
     trainer_config = DEFAULT_CONFIG.copy()
-    trainer_config['model'] = {"fcnet_hiddens": config['hidden_sizes'], "custom_preprocessor": "my_prep"}
+    trainer_config['model'] = {"fcnet_hiddens": config['hidden_sizes'], "custom_preprocessor": preprocessor}
     trainer_config['multiagent'] = {"policy_graphs": policy_graphs,
                                   "policy_mapping_fn": policy_mapping_fn,
                                   "policies_to_train": list(policy_graphs.keys())}
@@ -129,8 +147,8 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "seed": seed
                 },
         resources_per_trial={
-            "cpu": 1,
-            "gpu": 0.0
+            "cpu": 12,
+            "gpu": 0.5
         },
         local_dir=local_dir
     )
@@ -138,6 +156,6 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
 
 if __name__ == '__main__':
     gin.external_configurable(tune.grid_search)
-    dir = '/home/guillaume/Desktop/distMAgent/baselines/experiment_configs/n_agents_experiment'  # To Modify
+    dir = '/mount/SDC/flatland/baselines/experiment_configs/observation_benchmark'  # To Modify
     gin.parse_config_file(dir + '/config.gin')
     run_experiment(local_dir=dir)
