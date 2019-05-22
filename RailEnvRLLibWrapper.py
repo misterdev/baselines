@@ -3,6 +3,8 @@ from ray.rllib.env.multi_agent_env import MultiAgentEnv
 from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.generators import random_rail_generator
 from ray.rllib.utils.seed import seed as set_seed
+import numpy as np
+
 
 class RailEnvRLLibWrapper(MultiAgentEnv):
 
@@ -13,15 +15,20 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
                  # number_of_agents=1,
                  # obs_builder_object=TreeObsForRailEnv(max_depth=2)):
         super(MultiAgentEnv, self).__init__()
-        self.rail_generator = config["rail_generator"](nr_start_goal=config['number_of_agents'], min_dist=5, nr_extra=30,
-                                                       seed=config['seed'] * (1+config.vector_index))
+        self.rail_generator = config["rail_generator"](nr_start_goal=config['number_of_agents'], min_dist=5,
+                                                       nr_extra=30, seed=config['seed'] * (1+config.vector_index))
         set_seed(config['seed'] * (1+config.vector_index))
         self.env = RailEnv(width=config["width"], height=config["height"], rail_generator=self.rail_generator,
                 number_of_agents=config["number_of_agents"], obs_builder_object=config['obs_builder'])
     
     def reset(self):
         self.agents_done = []
-        return self.env.reset()
+        obs = self.env.reset()
+        o = dict()
+        # o['agents'] = obs
+        # obs[0] = [obs[0], np.ones((17, 17)) * 17]
+        # obs['global_obs'] = np.ones((17, 17)) * 17
+        return obs
 
     def step(self, action_dict):
         obs, rewards, dones, infos = self.env.step(action_dict)
@@ -46,7 +53,15 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         
         #print(obs)
         #return obs, rewards, dones, infos
+        # oo = dict()
+        # oo['agents'] = o
+        # o['global'] = np.ones((17, 17)) * 17
+
+        # o[0] = [o[0], np.ones((17, 17)) * 17]
+        # o['global_obs'] = np.ones((17, 17)) * 17
+        # r['global_obs'] = 0
+        # d['global_obs'] = True
         return o, r, d, infos
-    
+
     def get_agent_handles(self):
         return self.env.get_agent_handles()

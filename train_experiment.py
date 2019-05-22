@@ -8,8 +8,9 @@ from flatland.envs.generators import complex_rail_generator
 # Import PPO trainer: we can replace these imports by any other trainer from RLLib.
 from ray.rllib.agents.ppo.ppo import DEFAULT_CONFIG
 from ray.rllib.agents.ppo.ppo import PPOTrainer as Trainer
-# from ray.rllib.agents.ppo.ppo_policy_graph import PPOPolicyGraph as PolicyGraph
-from baselines.CustomPPOPolicyGraph import CustomPPOPolicyGraph as PolicyGraph
+# from baselines.CustomPPOTrainer import PPOTrainer as Trainer
+from ray.rllib.agents.ppo.ppo_policy_graph import PPOPolicyGraph as PolicyGraph
+# from baselines.CustomPPOPolicyGraph import CustomPPOPolicyGraph as PolicyGraph
 
 from ray.rllib.models import ModelCatalog
 from ray.tune.logger import pretty_print
@@ -27,9 +28,10 @@ import gin
 from ray import tune
 
 from ray.rllib.utils.seed import seed as set_seed
-from flatland.envs.observations import TreeObsForRailEnv, GlobalObsForRailEnv
+from flatland.envs.observations import TreeObsForRailEnv, GlobalObsForRailEnv, LocalObsForRailEnv
 gin.external_configurable(TreeObsForRailEnv)
 gin.external_configurable(GlobalObsForRailEnv)
+gin.external_configurable(LocalObsForRailEnv)
 
 from ray.rllib.models.preprocessors import TupleFlatteningPreprocessor
 
@@ -76,6 +78,15 @@ def train(config, reporter):
             gym.spaces.Box(low=0, high=1, shape=(4,))))
         preprocessor = "global_obs_prep"
 
+    elif isinstance(config["obs_builder"], LocalObsForRailEnv):
+        view_radius = config["obs_builder"].view_radius
+        obs_space = gym.spaces.Tuple((
+            gym.spaces.Box(low=0, high=1, shape=(2 * view_radius + 1, 2 * view_radius + 1, 16)),
+            gym.spaces.Box(low=0, high=1, shape=(2 * view_radius + 1, 2 * view_radius + 1, 2)),
+            gym.spaces.Box(low=0, high=1, shape=(2 * view_radius + 1, 2 * view_radius + 1, 4)),
+            gym.spaces.Box(low=0, high=1, shape=(4,))))
+        preprocessor = "global_obs_prep"
+
     else:
         raise ValueError("Undefined observation space")
 
@@ -107,8 +118,9 @@ def train(config, reporter):
     trainer_config["num_envs_per_worker"] = 1
     trainer_config["env_config"] = env_config
     trainer_config["batch_mode"] = "complete_episodes"
-    trainer_config['simple_optimizer'] = True
+    trainer_config['simple_optimizer'] = False
     trainer_config['postprocess_inputs'] = True
+    trainer_config['log_level'] = 'WARN'
 
     def logger_creator(conf):
         """Creates a Unified logger with a default logdir prefix

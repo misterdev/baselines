@@ -5,12 +5,13 @@ run_experiment.hidden_sizes = [32, 32]
 
 run_experiment.map_width = 20
 run_experiment.map_height = 20
-run_experiment.n_agents = {"grid_search": [2, 5]}
+run_experiment.n_agents = 5
 run_experiment.policy_folder_name = "ppo_policy_{config[obs_builder].__class__.__name__}_{config[n_agents]}_agents"
 
 run_experiment.horizon = 50
 run_experiment.seed = 123
 
-run_experiment.obs_builder = {"grid_search": [@TreeObsForRailEnv(), @GlobalObsForRailEnv()]}
+run_experiment.obs_builder = {"grid_search": [@LocalObsForRailEnv()]}# [@TreeObsForRailEnv(), @GlobalObsForRailEnv() ]}
 TreeObsForRailEnv.max_depth = 2
+LocalObsForRailEnv.view_radius = 5
 
