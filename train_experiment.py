@@ -116,6 +116,7 @@ def train(config, reporter):
     trainer_config["num_gpus_per_worker"] = 0
     trainer_config["num_cpus_for_driver"] = 1
     trainer_config["num_envs_per_worker"] = 1
+    trainer_config['entropy_coeff'] = config['entropy_coeff']
     trainer_config["env_config"] = env_config
     trainer_config["batch_mode"] = "complete_episodes"
     trainer_config['simple_optimizer'] = False
@@ -149,7 +150,8 @@ def train(config, reporter):
 
 @gin.configurable
 def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
-                    map_width, map_height, horizon, policy_folder_name, local_dir, obs_builder, seed):
+                   map_width, map_height, horizon, policy_folder_name, local_dir, obs_builder,
+                   entropy_coeff, seed):
 
     tune.run(
         train,
@@ -164,6 +166,7 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "horizon": horizon,  # Max number of time steps
                 'policy_folder_name': policy_folder_name,
                 "obs_builder": obs_builder,
+                "entropy_coeff": entropy_coeff,
                 "seed": seed
                 },
         resources_per_trial={
