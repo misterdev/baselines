@@ -36,7 +36,7 @@ def norm_obs_clip(obs, clip_min=-1, clip_max=1):
     :param obs: Observation that should be normalized
     :param clip_min: min value where observation will be clipped
     :param clip_max: max value where observation will be clipped
-    :return: returnes normalized and clipped observatoin
+    :return: returns normalized and clipped observation
     """
     max_obs = max(1, max_lt(obs, 1000))
     min_obs = max(0, min_lt(obs, 0))
@@ -53,7 +53,11 @@ class CustomPreprocessor(Preprocessor):
         return (105,)
 
     def transform(self, observation):
-        return norm_obs_clip(observation)  # return the preprocessed observation
+        if len(observation) == 105:
+            return norm_obs_clip(observation)
+        else:
+            return observation
+
 
 
 
