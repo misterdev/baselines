@@ -210,5 +210,5 @@ for trials in range(1, n_trials + 1):
                 eps,
                 action_prob / np.sum(action_prob)))
         torch.save(agent.qnetwork_local.state_dict(),
-                   '../flatland/baselines/Nets/avoid_checkpoint' + str(trials) + '.pth')
+                   './Nets/avoid_checkpoint' + str(trials) + '.pth')
         action_prob = [1] * 4
