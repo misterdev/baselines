@@ -36,7 +36,7 @@ env = RailEnv(width=20,
 env = RailEnv(width=15,
               height=15,
               rail_generator=complex_rail_generator(nr_start_goal=10, nr_extra=10, min_dist=10, max_dist=99999, seed=0),
-              number_of_agents=5)
+              number_of_agents=1)
 
 """
 env = RailEnv(width=20,
@@ -66,7 +66,7 @@ action_prob = [0] * 4
 agent_obs = [None] * env.get_num_agents()
 agent_next_obs = [None] * env.get_num_agents()
 agent = Agent(state_size, action_size, "FC", 0)
-agent.qnetwork_local.load_state_dict(torch.load('./Nets/avoid_checkpoint15000.pth'))
+agent.qnetwork_local.load_state_dict(torch.load('./Nets/avoid_checkpoint10400.pth'))
 
 demo = True
 
@@ -191,8 +191,7 @@ for trials in range(1, n_trials + 1):
     scores.append(np.mean(scores_window))
     dones_list.append((np.mean(done_window)))
 
-    print('\rTraining {} Agents.\t Episode {}\t Average Score: {:.0f}\tDones: {:.2f}%' +
-          '\tEpsilon: {:.2f} \t Action Probabilities: \t {}'.format(
+    print('\rTraining {} Agents.\t Episode {}\t Average Score: {:.0f}\tDones: {:.2f}%\tEpsilon: {:.2f} \t Action Probabilities: \t {}'.format(
               env.get_num_agents(),
               trials,
               np.mean(scores_window),
@@ -201,8 +200,7 @@ for trials in range(1, n_trials + 1):
 
     if trials % 100 == 0:
         print(
-            '\rTraining {} Agents.\t Episode {}\t Average Score: {:.0f}\tDones: {:.2f}%' +
-            '\tEpsilon: {:.2f} \t Action Probabilities: \t {}'.format(
+            '\rTraining {} Agents.\t Episode {}\t Average Score: {:.0f}\tDones: {:.2f}%\tEpsilon: {:.2f} \t Action Probabilities: \t {}'.format(
                 env.get_num_agents(),
                 trials,
                 np.mean(scores_window),
