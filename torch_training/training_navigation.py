@@ -4,7 +4,7 @@ from collections import deque
 import numpy as np
 import torch
 
-from baselines.torch_training.dueling_double_dqn import Agent
+from dueling_double_dqn import Agent
 from flatland.envs.generators import complex_rail_generator
 from flatland.envs.rail_env import RailEnv
 from flatland.utils.rendertools import RenderTool
@@ -46,7 +46,7 @@ env = RailEnv(width=20,
               number_of_agents=3)
 
 """
-env_renderer = RenderTool(env, gl="QTSVG")
+env_renderer = RenderTool(env, gl="QT")
 handle = env.get_agent_handles()
 
 state_size = 105 * 2
@@ -66,7 +66,7 @@ action_prob = [0] * 4
 agent_obs = [None] * env.get_num_agents()
 agent_next_obs = [None] * env.get_num_agents()
 agent = Agent(state_size, action_size, "FC", 0)
-agent.qnetwork_local.load_state_dict(torch.load('./baselines/torch_training/Nets/avoid_checkpoint15000.pth'))
+agent.qnetwork_local.load_state_dict(torch.load('./Nets/avoid_checkpoint15000.pth'))
 
 demo = True
 
