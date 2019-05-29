@@ -1,4 +1,4 @@
-from baselines.RailEnvRLLibWrapper import RailEnvRLLibWrapper
+from baselines.RLLib_training.RailEnvRLLibWrapper import RailEnvRLLibWrapper
 import gym
 
 
@@ -14,7 +14,9 @@ from ray.rllib.agents.ppo.ppo_policy_graph import PPOPolicyGraph as PolicyGraph
 
 from ray.rllib.models import ModelCatalog
 from ray.tune.logger import pretty_print
-from baselines.CustomPreprocessor import CustomPreprocessor
+from baselines.RLLib_training.custom_preprocessors import CustomPreprocessor, ConvModelPreprocessor
+
+from baselines.RLLib_training.custom_models import ConvModelGlobalObs
 
 
 import ray
@@ -28,15 +30,20 @@ import gin
 from ray import tune
 
 from ray.rllib.utils.seed import seed as set_seed
-from flatland.envs.observations import TreeObsForRailEnv, GlobalObsForRailEnv, LocalObsForRailEnv
+from flatland.envs.observations import TreeObsForRailEnv, GlobalObsForRailEnv,\
+                                       LocalObsForRailEnv, GlobalObsForRailEnvDirectionDependent
+
 gin.external_configurable(TreeObsForRailEnv)
 gin.external_configurable(GlobalObsForRailEnv)
 gin.external_configurable(LocalObsForRailEnv)
+gin.external_configurable(GlobalObsForRailEnvDirectionDependent)
 
 from ray.rllib.models.preprocessors import TupleFlatteningPreprocessor
 
 ModelCatalog.register_custom_preprocessor("tree_obs_prep", CustomPreprocessor)
 ModelCatalog.register_custom_preprocessor("global_obs_prep", TupleFlatteningPreprocessor)
+ModelCatalog.register_custom_preprocessor("conv_obs_prep", ConvModelPreprocessor)
+ModelCatalog.register_custom_model("conv_model", ConvModelGlobalObs)
 ray.init()#object_store_memory=150000000000, redis_max_memory=30000000000)
 
 
@@ -70,13 +77,16 @@ def train(config, reporter):
         obs_space = gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(105,))
         preprocessor = "tree_obs_prep"
 
-    elif isinstance(config["obs_builder"], GlobalObsForRailEnv):
+    elif isinstance(config["obs_builder"], GlobalObsForRailEnv) or \
+         isinstance(config["obs_builder"], GlobalObsForRailEnvDirectionDependent):
         obs_space = gym.spaces.Tuple((
             gym.spaces.Box(low=0, high=1, shape=(config['map_height'], config['map_width'], 16)),
-            gym.spaces.Box(low=0, high=1, shape=(config['map_height'], config['map_width'], 3)),
-            gym.spaces.Box(low=0, high=1, shape=(config['map_height'], config['map_width'], 4)),
-            gym.spaces.Box(low=0, high=1, shape=(4,))))
-        preprocessor = "global_obs_prep"
+            gym.spaces.Box(low=0, high=1, shape=(config['map_height'], config['map_width'], 8)),
+            gym.spaces.Box(low=0, high=1, shape=(config['map_height'], config['map_width'], 2))))
+        if config['conv_model']:
+            preprocessor = "conv_obs_prep"
+        else:
+            preprocessor = "global_obs_prep"
 
     elif isinstance(config["obs_builder"], LocalObsForRailEnv):
         view_radius = config["obs_builder"].view_radius
@@ -104,7 +114,11 @@ def train(config, reporter):
 
     # Trainer configuration
     trainer_config = DEFAULT_CONFIG.copy()
-    trainer_config['model'] = {"fcnet_hiddens": config['hidden_sizes'], "custom_preprocessor": preprocessor}
+    if config['conv_model']:
+        trainer_config['model'] = {"custom_model": "conv_model", "custom_preprocessor": preprocessor}
+    else:
+        trainer_config['model'] = {"fcnet_hiddens": config['hidden_sizes'], "custom_preprocessor": preprocessor}
+
     trainer_config['multiagent'] = {"policy_graphs": policy_graphs,
                                   "policy_mapping_fn": policy_mapping_fn,
                                   "policies_to_train": list(policy_graphs.keys())}
@@ -151,7 +165,7 @@ def train(config, reporter):
 @gin.configurable
 def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                    map_width, map_height, horizon, policy_folder_name, local_dir, obs_builder,
-                   entropy_coeff, seed):
+                   entropy_coeff, seed, conv_model):
 
     tune.run(
         train,
@@ -167,7 +181,8 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 'policy_folder_name': policy_folder_name,
                 "obs_builder": obs_builder,
                 "entropy_coeff": entropy_coeff,
-                "seed": seed
+                "seed": seed,
+                "conv_model": conv_model
                 },
         resources_per_trial={
             "cpu": 2,
@@ -179,6 +194,6 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
 
 if __name__ == '__main__':
     gin.external_configurable(tune.grid_search)
-    dir = '/home/guillaume/EPFL/Master_Thesis/flatland/baselines/experiment_configs/observation_benchmark'  # To Modify
+    dir = '/home/guillaume/EPFL/Master_Thesis/flatland/baselines/RLLib_training/experiment_configs/conv_model_test'  # To Modify
     gin.parse_config_file(dir + '/config.gin')
     run_experiment(local_dir=dir)

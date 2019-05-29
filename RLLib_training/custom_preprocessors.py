@@ -59,6 +59,16 @@ class CustomPreprocessor(Preprocessor):
             return observation
 
 
+class ConvModelPreprocessor(Preprocessor):
+    def _init_shape(self, obs_space, options):
+        out_shape = (obs_space[0].shape[0], obs_space[0].shape[1], sum([space.shape[2] for space in obs_space]))
+        return out_shape
+
+    def transform(self, observation):
+        return np.concatenate([observation[0],
+                               observation[1],
+                               observation[2]], axis=2)
+
 
 
 # class NoPreprocessor:
