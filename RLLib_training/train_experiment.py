@@ -77,11 +77,20 @@ def train(config, reporter):
         obs_space = gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(105,))
         preprocessor = "tree_obs_prep"
 
-    elif isinstance(config["obs_builder"], GlobalObsForRailEnv) or \
-         isinstance(config["obs_builder"], GlobalObsForRailEnvDirectionDependent):
+    elif isinstance(config["obs_builder"], GlobalObsForRailEnv):
         obs_space = gym.spaces.Tuple((
             gym.spaces.Box(low=0, high=1, shape=(config['map_height'], config['map_width'], 16)),
             gym.spaces.Box(low=0, high=1, shape=(config['map_height'], config['map_width'], 8)),
+            gym.spaces.Box(low=0, high=1, shape=(config['map_height'], config['map_width'], 2))))
+        if config['conv_model']:
+            preprocessor = "conv_obs_prep"
+        else:
+            preprocessor = "global_obs_prep"
+
+    elif isinstance(config["obs_builder"], GlobalObsForRailEnvDirectionDependent):
+        obs_space = gym.spaces.Tuple((
+            gym.spaces.Box(low=0, high=1, shape=(config['map_height'], config['map_width'], 16)),
+            gym.spaces.Box(low=0, high=1, shape=(config['map_height'], config['map_width'], 5)),
             gym.spaces.Box(low=0, high=1, shape=(config['map_height'], config['map_width'], 2))))
         if config['conv_model']:
             preprocessor = "conv_obs_prep"
