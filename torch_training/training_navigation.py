@@ -32,21 +32,20 @@ env = RailEnv(width=20,
               height=20,
               rail_generator=random_rail_generator(cell_type_relative_proportion=transition_probability),
               number_of_agents=1)
-"""
+
 env = RailEnv(width=15,
               height=15,
               rail_generator=complex_rail_generator(nr_start_goal=10, nr_extra=10, min_dist=10, max_dist=99999, seed=0),
               number_of_agents=1)
 
 """
-env = RailEnv(width=20,
-              height=20,
-              rail_generator=rail_from_list_of_saved_GridTransitionMap_generator(
-                      ['../notebooks/temp.npy']),
-              number_of_agents=3)
 
-"""
-env_renderer = RenderTool(env, gl="QT")
+env = RailEnv(width=10,
+              height=20)
+env.load("./railway/complex_scene.pkl")
+env.reset(False, False)
+
+env_renderer = RenderTool(env, gl="PILSVG")
 handle = env.get_agent_handles()
 
 state_size = 105 * 2
@@ -120,7 +119,7 @@ def norm_obs_clip(obs, clip_min=-1, clip_max=1):
 for trials in range(1, n_trials + 1):
 
     # Reset environment
-    obs = env.reset()
+    obs = env.reset(False,False)
 
     final_obs = obs.copy()
     final_obs_next = obs.copy()
@@ -141,9 +140,9 @@ for trials in range(1, n_trials + 1):
     score = 0
     env_done = 0
     # Run episode
-    for step in range(100):
+    for step in range(360):
         if demo:
-            env_renderer.renderEnv(show=True)
+            env_renderer.renderEnv(show=True,show_observations=False)
         # print(step)
         # Action
         for a in range(env.get_num_agents()):
