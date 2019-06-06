@@ -33,6 +33,9 @@ from ray.rllib.utils.seed import seed as set_seed
 from flatland.envs.observations import TreeObsForRailEnv, GlobalObsForRailEnv,\
                                        LocalObsForRailEnv, GlobalObsForRailEnvDirectionDependent
 
+from flatland.utils.rendertools import RenderTool
+import time
+
 gin.external_configurable(TreeObsForRailEnv)
 gin.external_configurable(GlobalObsForRailEnv)
 gin.external_configurable(LocalObsForRailEnv)
@@ -47,10 +50,29 @@ ModelCatalog.register_custom_model("conv_model", ConvModelGlobalObs)
 ray.init()#object_store_memory=150000000000, redis_max_memory=30000000000)
 
 
-def train(config, reporter):
+CHECKPOINT_PATH = '/home/guillaume/EPFL/Master_Thesis/flatland/baselines/RLLib_training/experiment_configs/' \
+                  'conv_model_test/ppo_policy_TreeObsForRailEnv_5_agents_conv_model_False_ial1g3w9/checkpoint_51/checkpoint-51'
+
+N_EPISODES = 3
+N_STEPS_PER_EPISODE = 50
+
+
+def render_training_result(config):
     print('Init Env')
 
     set_seed(config['seed'], config['seed'], config['seed'])
+
+    transition_probability = [15,  # empty cell - Case 0
+                              5,  # Case 1 - straight
+                              5,  # Case 2 - simple switch
+                              1,  # Case 3 - diamond crossing
+                              1,  # Case 4 - single slip
+                              1,  # Case 5 - double slip
+                              1,  # Case 6 - symmetrical
+                              0,  # Case 7 - dead end
+                              1,  # Case 1b (8)  - simple turn right
+                              1,  # Case 1c (9)  - simple turn left
+                              1]  # Case 2b (10) - simple switch mirrored
 
     # Example configuration to generate a random rail
     env_config = {"width": config['map_width'],
@@ -59,6 +81,7 @@ def train(config, reporter):
                   "number_of_agents": config['n_agents'],
                   "seed": config['seed'],
                   "obs_builder": config['obs_builder']}
+
 
     # Observation space and action space definitions
     if isinstance(config["obs_builder"], TreeObsForRailEnv):
@@ -97,7 +120,6 @@ def train(config, reporter):
     else:
         raise ValueError("Undefined observation space")
 
-
     act_space = gym.spaces.Discrete(4)
 
     # Dict with the different policies to train
@@ -108,7 +130,6 @@ def train(config, reporter):
     def policy_mapping_fn(agent_id):
         return config['policy_folder_name'].format(**locals())
 
-
     # Trainer configuration
     trainer_config = DEFAULT_CONFIG.copy()
     if config['conv_model']:
@@ -117,8 +138,8 @@ def train(config, reporter):
         trainer_config['model'] = {"fcnet_hiddens": config['hidden_sizes'], "custom_preprocessor": preprocessor}
 
     trainer_config['multiagent'] = {"policy_graphs": policy_graphs,
-                                  "policy_mapping_fn": policy_mapping_fn,
-                                  "policies_to_train": list(policy_graphs.keys())}
+                                    "policy_mapping_fn": policy_mapping_fn,
+                                    "policies_to_train": list(policy_graphs.keys())}
     trainer_config["horizon"] = config['horizon']
 
     trainer_config["num_workers"] = 0
@@ -134,29 +155,31 @@ def train(config, reporter):
     trainer_config['postprocess_inputs'] = True
     trainer_config['log_level'] = 'WARN'
 
-    def logger_creator(conf):
-        """Creates a Unified logger with a default logdir prefix
-        containing the agent name and the env id
-        """
-        logdir = config['policy_folder_name'].format(**locals())
-        logdir = tempfile.mkdtemp(
-            prefix=logdir, dir=config['local_dir'])
-        return UnifiedLogger(conf, logdir, None)
+    env = RailEnvRLLibWrapper(env_config)
 
-    logger = logger_creator
+    trainer = Trainer(env=RailEnvRLLibWrapper, config=trainer_config)
 
-    trainer = Trainer(env=RailEnvRLLibWrapper, config=trainer_config, logger_creator=logger)
+    trainer.restore(CHECKPOINT_PATH)
 
-    for i in range(100000 + 2):
-        print("== Iteration", i, "==")
+    policy = trainer.get_policy(config['policy_folder_name'].format(**locals()))
 
-        print(pretty_print(trainer.train()))
+    env_renderer = RenderTool(env, gl="PIL", show=True)
+    for episode in range(N_EPISODES):
+        observation = env.reset()
+        for i in range(N_STEPS_PER_EPISODE):
 
-        if i % config['save_every'] == 0:
-            checkpoint = trainer.save()
-            print("checkpoint saved at", checkpoint)
+            action, _, infos = policy.compute_actions(list(observation.values()), [])
+            env_renderer.renderEnv(show=True, frames=True, iEpisode=episode, iStep=i,
+                                   action_dict=action)
+            logits = infos['behaviour_logits']
+            actions = dict()
+            for j, logit in enumerate(logits):
+                actions[j] = np.argmax(logit)
 
-        reporter(num_iterations_trained=trainer._iteration)
+            time.sleep(1)
+            observation, _, _, _ = env.step(action)
+
+    env_renderer.close_window()
 
 
 @gin.configurable
@@ -164,10 +187,7 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                    map_width, map_height, horizon, policy_folder_name, local_dir, obs_builder,
                    entropy_coeff, seed, conv_model):
 
-    tune.run(
-        train,
-        name=name,
-        stop={"num_iterations_trained": num_iterations},
+    render_training_result(
         config={"n_agents": n_agents,
                 "hidden_sizes": hidden_sizes,  # Array containing the sizes of the network layers
                 "save_every": save_every,
@@ -180,13 +200,7 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "entropy_coeff": entropy_coeff,
                 "seed": seed,
                 "conv_model": conv_model
-                },
-        resources_per_trial={
-            "cpu": 2,
-            "gpu": 0.0
-        },
-        local_dir=local_dir
-    )
+                })
 
 
 if __name__ == '__main__':

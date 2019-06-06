@@ -1,0 +1,18 @@
+run_experiment.name = "observation_benchmark_loaded_env_results"
+run_experiment.num_iterations = 1002
+run_experiment.save_every = 50
+run_experiment.hidden_sizes = 32
+
+run_experiment.map_width = 20
+run_experiment.map_height = 20
+run_experiment.n_agents = 5
+run_experiment.policy_folder_name = "ppo_policy_{config[obs_builder].__class__.__name__}"#_entropy_coeff_{config[entropy_coeff]}_{config[hidden_sizes][0]}_hidden_sizes_"
+
+run_experiment.horizon = 50
+run_experiment.seed = 123
+
+run_experiment.entropy_coeff = 1e-2
+
+run_experiment.obs_builder = {"grid_search": [@LocalObsForRailEnv(), @TreeObsForRailEnv(), @GlobalObsForRailEnv(), @GlobalObsForRailEnvDirectionDependent]}
+TreeObsForRailEnv.max_depth = 2
+LocalObsForRailEnv.view_radius = 5

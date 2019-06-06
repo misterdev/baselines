@@ -15,19 +15,37 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
                  # number_of_agents=1,
                  # obs_builder_object=TreeObsForRailEnv(max_depth=2)):
         super(MultiAgentEnv, self).__init__()
+        if hasattr(config, "vector_index"):
+            vector_index = config.vector_index
+        else:
+            vector_index = 1
         self.rail_generator = config["rail_generator"](nr_start_goal=config['number_of_agents'], min_dist=5,
-                                                       nr_extra=30, seed=config['seed'] * (1+config.vector_index))
-        set_seed(config['seed'] * (1+config.vector_index))
+                                                       nr_extra=30, seed=config['seed'] * (1+vector_index))
+        set_seed(config['seed'] * (1+vector_index))
         self.env = RailEnv(width=config["width"], height=config["height"], rail_generator=self.rail_generator,
                 number_of_agents=config["number_of_agents"], obs_builder_object=config['obs_builder'])
+
+        self.env.load('./baselines/torch_training/railway/complex_scene.pkl')
+
+        self.width = self.env.width
+        self.height = self.env.height
+
+
     
     def reset(self):
         self.agents_done = []
-        obs = self.env.reset()
+        obs = self.env.reset(False, False)
         o = dict()
         # o['agents'] = obs
         # obs[0] = [obs[0], np.ones((17, 17)) * 17]
         # obs['global_obs'] = np.ones((17, 17)) * 17
+
+
+        self.rail = self.env.rail
+        self.agents = self.env.agents
+        self.agents_static = self.env.agents_static
+        self.dev_obs_dict = self.env.dev_obs_dict
+
         return obs
 
     def step(self, action_dict):
@@ -50,6 +68,11 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         for agent, done in dones.items():
             if done and agent != '__all__':
                 self.agents_done.append(agent)
+
+        self.rail = self.env.rail
+        self.agents = self.env.agents
+        self.agents_static = self.env.agents_static
+        self.dev_obs_dict = self.env.dev_obs_dict
         
         #print(obs)
         #return obs, rewards, dones, infos
@@ -65,3 +88,6 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
 
     def get_agent_handles(self):
         return self.env.get_agent_handles()
+
+    def get_num_agents(self):
+        return self.env.get_num_agents()
