@@ -1,14 +1,19 @@
-run_experiment.name = "n_agents_results"
+run_experiment.name = "observation_benchmark_results"
 run_experiment.num_iterations = 1002
-run_experiment.save_every = 200
-run_experiment.hidden_sizes = [32, 32]
+run_experiment.save_every = 100
+run_experiment.hidden_sizes = [32,32]
 
 run_experiment.map_width = 20
 run_experiment.map_height = 20
-run_experiment.n_agents = {"grid_search": [1]}#, 2, 5, 10]}
-run_experiment.policy_folder_name = "ppo_policy_{config[n_agents]}_agents"
+run_experiment.n_agents = {"grid_search": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
+run_experiment.policy_folder_name = "ppo_policy_{config[obs_builder].__class__.__name__}_entropy_coeff_{config[entropy_coeff]}_{config[n_agents]}_agents_"
 
 run_experiment.horizon = 50
 run_experiment.seed = 123
 
+run_experiment.entropy_coeff = {"grid_search": [1e-3, 1e-2, 0]}
+
+run_experiment.obs_builder = {"grid_search": [@TreeObsForRailEnv()]}# [@TreeObsForRailEnv(), @GlobalObsForRailEnv() ]}
+TreeObsForRailEnv.max_depth = 2
+LocalObsForRailEnv.view_radius = 5
 

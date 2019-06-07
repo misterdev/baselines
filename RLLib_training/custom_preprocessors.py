@@ -50,10 +50,10 @@ def norm_obs_clip(obs, clip_min=-1, clip_max=1):
 
 class CustomPreprocessor(Preprocessor):
     def _init_shape(self, obs_space, options):
-        return (105,)
+        return (111,)
 
     def transform(self, observation):
-        if len(observation) == 105:
+        if len(observation) == 111:
             return norm_obs_clip(observation)
         else:
             return observation

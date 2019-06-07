@@ -52,6 +52,10 @@ def train(config, reporter):
 
     set_seed(config['seed'], config['seed'], config['seed'])
 
+    config['map_width']= 20
+    config['map_height']= 10
+    config['n_agents'] = 8
+
     # Example configuration to generate a random rail
     env_config = {"width": config['map_width'],
                   "height": config['map_height'],
@@ -62,7 +66,7 @@ def train(config, reporter):
 
     # Observation space and action space definitions
     if isinstance(config["obs_builder"], TreeObsForRailEnv):
-        obs_space = gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(105,))
+        obs_space = gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(111,))
         preprocessor = "tree_obs_prep"
 
     elif isinstance(config["obs_builder"], GlobalObsForRailEnv):
@@ -191,6 +195,6 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
 
 if __name__ == '__main__':
     gin.external_configurable(tune.grid_search)
-    dir = '/home/guillaume/EPFL/Master_Thesis/flatland/baselines/RLLib_training/experiment_configs/conv_model_test'  # To Modify
+    dir = '/mount/SDC/flatland/baselines/RLLib_training/experiment_configs/observation_benchmark_loaded_env'  # To Modify
     gin.parse_config_file(dir + '/config.gin')
     run_experiment(local_dir=dir)

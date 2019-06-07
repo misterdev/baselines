@@ -19,13 +19,14 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
             vector_index = config.vector_index
         else:
             vector_index = 1
-        self.rail_generator = config["rail_generator"](nr_start_goal=config['number_of_agents'], min_dist=5,
-                                                       nr_extra=30, seed=config['seed'] * (1+vector_index))
+        #self.rail_generator = config["rail_generator"](nr_start_goal=config['number_of_agents'], min_dist=5,
+         #                                              nr_extra=30, seed=config['seed'] * (1+vector_index))
         set_seed(config['seed'] * (1+vector_index))
-        self.env = RailEnv(width=config["width"], height=config["height"], rail_generator=self.rail_generator,
+        #self.env = RailEnv(width=config["width"], height=config["height"],
+        self.env = RailEnv(width=10, height=20,
                 number_of_agents=config["number_of_agents"], obs_builder_object=config['obs_builder'])
 
-        self.env.load('./baselines/torch_training/railway/complex_scene.pkl')
+        self.env.load('/mount/SDC/flatland/baselines/torch_training/railway/complex_scene.pkl')
 
         self.width = self.env.width
         self.height = self.env.height
@@ -45,7 +46,6 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         self.agents = self.env.agents
         self.agents_static = self.env.agents_static
         self.dev_obs_dict = self.env.dev_obs_dict
-
         return obs
 
     def step(self, action_dict):
