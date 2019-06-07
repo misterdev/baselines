@@ -3,6 +3,7 @@ from ray.rllib.env.multi_agent_env import MultiAgentEnv
 from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.generators import random_rail_generator
 from ray.rllib.utils.seed import seed as set_seed
+from flatland.envs.generators import complex_rail_generator, random_rail_generator
 import numpy as np
 
 
@@ -19,14 +20,18 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
             vector_index = config.vector_index
         else:
             vector_index = 1
-        #self.rail_generator = config["rail_generator"](nr_start_goal=config['number_of_agents'], min_dist=5,
-         #                                              nr_extra=30, seed=config['seed'] * (1+vector_index))
+
+        if config['rail_generator'] == "complex_rail_generator":
+            self.rail_generator = complex_rail_generator(nr_start_goal=config['number_of_agents'], min_dist=5,
+                                                          nr_extra=config['nr_extra'], seed=config['seed'] * (1+vector_index))
+        else:
+            self.rail_generator = random_rail_generator()
+
         set_seed(config['seed'] * (1+vector_index))
-        #self.env = RailEnv(width=config["width"], height=config["height"],
-        self.env = RailEnv(width=10, height=20,
+        self.env = RailEnv(width=config["width"], height=config["height"],
                 number_of_agents=config["number_of_agents"], obs_builder_object=config['obs_builder'])
 
-        self.env.load('/mount/SDC/flatland/baselines/torch_training/railway/complex_scene.pkl')
+        # self.env.load('/home/guillaume/EPFL/Master_Thesis/flatland/baselines/torch_training/railway/complex_scene.pkl')
 
         self.width = self.env.width
         self.height = self.env.height
@@ -35,7 +40,7 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
     
     def reset(self):
         self.agents_done = []
-        obs = self.env.reset(False, False)
+        obs = self.env.reset()
         o = dict()
         # o['agents'] = obs
         # obs[0] = [obs[0], np.ones((17, 17)) * 17]

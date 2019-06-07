@@ -1,9 +1,9 @@
 from baselines.RLLib_training.RailEnvRLLibWrapper import RailEnvRLLibWrapper
 import gym
 
+import gin
 
 from flatland.envs.generators import complex_rail_generator
-
 
 # Import PPO trainer: we can replace these imports by any other trainer from RLLib.
 from ray.rllib.agents.ppo.ppo import DEFAULT_CONFIG
@@ -24,8 +24,6 @@ import numpy as np
 
 from ray.tune.logger import UnifiedLogger
 import tempfile
-
-import gin
 
 from ray import tune
 
@@ -59,14 +57,15 @@ def train(config, reporter):
     # Example configuration to generate a random rail
     env_config = {"width": config['map_width'],
                   "height": config['map_height'],
-                  "rail_generator": complex_rail_generator,
+                  "rail_generator": config["rail_generator"],
+                  "nr_extra": config["nr_extra"],
                   "number_of_agents": config['n_agents'],
                   "seed": config['seed'],
                   "obs_builder": config['obs_builder']}
 
     # Observation space and action space definitions
     if isinstance(config["obs_builder"], TreeObsForRailEnv):
-        obs_space = gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(111,))
+        obs_space = gym.spaces.Box(low=-1, high=1, shape=(147,))
         preprocessor = "tree_obs_prep"
 
     elif isinstance(config["obs_builder"], GlobalObsForRailEnv):
@@ -166,7 +165,7 @@ def train(config, reporter):
 @gin.configurable
 def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                    map_width, map_height, horizon, policy_folder_name, local_dir, obs_builder,
-                   entropy_coeff, seed, conv_model):
+                   entropy_coeff, seed, conv_model, rail_generator, nr_extra):
 
     tune.run(
         train,
@@ -183,7 +182,9 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "obs_builder": obs_builder,
                 "entropy_coeff": entropy_coeff,
                 "seed": seed,
-                "conv_model": conv_model
+                "conv_model": conv_model,
+                "rail_generator": rail_generator,
+                "nr_extra": nr_extra
                 },
         resources_per_trial={
             "cpu": 2,
@@ -195,6 +196,6 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
 
 if __name__ == '__main__':
     gin.external_configurable(tune.grid_search)
-    dir = '/mount/SDC/flatland/baselines/RLLib_training/experiment_configs/observation_benchmark_loaded_env'  # To Modify
+    dir = '/home/guillaume/EPFL/Master_Thesis/flatland/baselines/RLLib_training/experiment_configs/env_complexity_benchmark'  # To Modify
     gin.parse_config_file(dir + '/config.gin')
     run_experiment(local_dir=dir)
