@@ -4,10 +4,10 @@ run_experiment.save_every = 50
 run_experiment.hidden_sizes = [32, 32]
 
 run_experiment.map_width = 20
-run_experiment.map_height = 10
+run_experiment.map_height = 20
 run_experiment.n_agents = 8
 run_experiment.rail_generator = "complex_rail_generator"
-run_experiment.nr_extra = {"grid_search": [10, 20, 30, 40]}
+run_experiment.nr_extra = {"grid_search": [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]}
 run_experiment.policy_folder_name = "ppo_policy_nr_extra_{config[nr_extra]}_"
 
 run_experiment.horizon = 50

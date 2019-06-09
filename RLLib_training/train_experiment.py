@@ -50,10 +50,6 @@ def train(config, reporter):
 
     set_seed(config['seed'], config['seed'], config['seed'])
 
-    config['map_width']= 20
-    config['map_height']= 10
-    config['n_agents'] = 8
-
     # Example configuration to generate a random rail
     env_config = {"width": config['map_width'],
                   "height": config['map_height'],
@@ -136,6 +132,8 @@ def train(config, reporter):
     trainer_config['simple_optimizer'] = False
     trainer_config['postprocess_inputs'] = True
     trainer_config['log_level'] = 'WARN'
+    trainer_config['num_sgd_iter'] = 10
+    trainer_config['clip_param'] = 0.2
 
     def logger_creator(conf):
         """Creates a Unified logger with a default logdir prefix
@@ -187,7 +185,7 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "nr_extra": nr_extra
                 },
         resources_per_trial={
-            "cpu": 2,
+            "cpu": 4,
             "gpu": 0.0
         },
         local_dir=local_dir
@@ -196,6 +194,6 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
 
 if __name__ == '__main__':
     gin.external_configurable(tune.grid_search)
-    dir = '/home/guillaume/EPFL/Master_Thesis/flatland/baselines/RLLib_training/experiment_configs/env_complexity_benchmark'  # To Modify
+    dir = '/home/guillaume/flatland/baselines/RLLib_training/experiment_configs/env_complexity_benchmark'  # To Modify
     gin.parse_config_file(dir + '/config.gin')
     run_experiment(local_dir=dir)

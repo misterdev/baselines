@@ -25,11 +25,13 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
             self.rail_generator = complex_rail_generator(nr_start_goal=config['number_of_agents'], min_dist=5,
                                                           nr_extra=config['nr_extra'], seed=config['seed'] * (1+vector_index))
         else:
+            raise(Error)
             self.rail_generator = random_rail_generator()
 
         set_seed(config['seed'] * (1+vector_index))
         self.env = RailEnv(width=config["width"], height=config["height"],
-                number_of_agents=config["number_of_agents"], obs_builder_object=config['obs_builder'])
+                number_of_agents=config["number_of_agents"],
+                obs_builder_object=config['obs_builder'], rail_generator=self.rail_generator)
 
         # self.env.load('/home/guillaume/EPFL/Master_Thesis/flatland/baselines/torch_training/railway/complex_scene.pkl')
 
