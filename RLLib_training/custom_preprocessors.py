@@ -54,6 +54,8 @@ class CustomPreprocessor(Preprocessor):
     def transform(self, observation):
         # if len(observation) == 111:
         return norm_obs_clip(observation)
+        one_hot = observation[-3:]
+        return np.append(obs, one_hot)
         # else:
         #     return observation
 

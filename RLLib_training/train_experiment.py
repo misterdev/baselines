@@ -121,7 +121,7 @@ def train(config, reporter):
     trainer_config["horizon"] = config['horizon']
 
     trainer_config["num_workers"] = 0
-    trainer_config["num_cpus_per_worker"] = 3
+    trainer_config["num_cpus_per_worker"] = 2
     trainer_config["num_gpus"] = 0
     trainer_config["num_gpus_per_worker"] = 0
     trainer_config["num_cpus_for_driver"] = 1
@@ -134,6 +134,8 @@ def train(config, reporter):
     trainer_config['log_level'] = 'WARN'
     trainer_config['num_sgd_iter'] = 10
     trainer_config['clip_param'] = 0.2
+    trainer_config['kl_coeff'] = config['kl_coeff']
+    trainer_config['lambda'] = config['lambda_gae']
 
     def logger_creator(conf):
         """Creates a Unified logger with a default logdir prefix
@@ -163,7 +165,7 @@ def train(config, reporter):
 @gin.configurable
 def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                    map_width, map_height, horizon, policy_folder_name, local_dir, obs_builder,
-                   entropy_coeff, seed, conv_model, rail_generator, nr_extra):
+                   entropy_coeff, seed, conv_model, rail_generator, nr_extra, kl_coeff, lambda_gae):
 
     tune.run(
         train,
@@ -182,10 +184,12 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "seed": seed,
                 "conv_model": conv_model,
                 "rail_generator": rail_generator,
-                "nr_extra": nr_extra
+                "nr_extra": nr_extra,
+                "kl_coeff": kl_coeff,
+                "lambda_gae": lambda_gae
                 },
         resources_per_trial={
-            "cpu": 4,
+            "cpu": 3,
             "gpu": 0.0
         },
         local_dir=local_dir
@@ -194,6 +198,6 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
 
 if __name__ == '__main__':
     gin.external_configurable(tune.grid_search)
-    dir = '/home/guillaume/flatland/baselines/RLLib_training/experiment_configs/env_complexity_benchmark'  # To Modify
+    dir = '/home/guillaume/flatland/baselines/RLLib_training/experiment_configs/env_size_benchmark_3_agents'  # To Modify
     gin.parse_config_file(dir + '/config.gin')
     run_experiment(local_dir=dir)

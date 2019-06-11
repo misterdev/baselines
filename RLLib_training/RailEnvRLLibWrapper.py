@@ -44,6 +44,14 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         self.agents_done = []
         obs = self.env.reset()
         o = dict()
+        
+        
+        #for agent, _ in obs.items():                                     
+            #o[agent] = obs[agent]                                     
+        #    one_hot_agent_encoding = np.zeros(len(self.env.agents))   
+        #    one_hot_agent_encoding[agent] += 1                        
+        #    o[agent] = np.append(obs[agent], one_hot_agent_encoding)        
+        
         # o['agents'] = obs
         # obs[0] = [obs[0], np.ones((17, 17)) * 17]
         # obs['global_obs'] = np.ones((17, 17)) * 17
@@ -67,7 +75,10 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         for agent, done in dones.items():
             if agent not in self.agents_done:
                 if agent != '__all__':
-                    o[agent] = obs[agent]
+        #            o[agent] = obs[agent]
+                    #one_hot_agent_encoding = np.zeros(len(self.env.agents))
+                    #one_hot_agent_encoding[agent] += 1
+                    o[agent] = obs[agent]#np.append(obs[agent], one_hot_agent_encoding)
                     r[agent] = rewards[agent]
     
                 d[agent] = dones[agent]
