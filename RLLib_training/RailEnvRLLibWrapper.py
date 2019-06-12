@@ -26,7 +26,7 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         self.env = RailEnv(width=10, height=20,
                 number_of_agents=config["number_of_agents"], obs_builder_object=config['obs_builder'])
 
-        self.env.load('/mount/SDC/flatland/baselines/torch_training/railway/complex_scene.pkl')
+        self.env.load_resource('torch_training.railway', 'complex_scene.pkl')
 
         self.width = self.env.width
         self.height = self.env.height

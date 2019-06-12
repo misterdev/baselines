@@ -1,0 +1,6 @@
+#ray==0.7.0
+gym ==0.12.5
+opencv-python==4.1.0.25
+#tensorflow==1.13.1
+lz4==2.1.10
+gin-config==0.1.4
