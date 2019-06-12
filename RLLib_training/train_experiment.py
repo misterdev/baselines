@@ -61,7 +61,12 @@ def train(config, reporter):
 
     # Observation space and action space definitions
     if isinstance(config["obs_builder"], TreeObsForRailEnv):
-        obs_space = gym.spaces.Box(low=-1, high=1, shape=(147,))
+        obs_space = gym.spaces.Tuple((gym.spaces.Box(low=0, high=float('inf'), shape=(147,)),
+                                     gym.spaces.Box(low=0, high=1, shape=(config['n_agents'],)),
+                                     gym.spaces.Box(low=0, high=1, shape=(20, config['n_agents'])),
+                                     gym.spaces.Box(low=0, high=float('inf'), shape=(147,)),
+                                     gym.spaces.Box(low=0, high=1, shape=(config['n_agents'],)),
+                                     gym.spaces.Box(low=0, high=1, shape=(20, config['n_agents']))))
         preprocessor = "tree_obs_prep"
 
     elif isinstance(config["obs_builder"], GlobalObsForRailEnv):
@@ -97,7 +102,7 @@ def train(config, reporter):
         raise ValueError("Undefined observation space")
 
 
-    act_space = gym.spaces.Discrete(4)
+    act_space = gym.spaces.Discrete(5)
 
     # Dict with the different policies to train
     policy_graphs = {
@@ -121,11 +126,11 @@ def train(config, reporter):
     trainer_config["horizon"] = config['horizon']
 
     trainer_config["num_workers"] = 0
-    trainer_config["num_cpus_per_worker"] = 2
-    trainer_config["num_gpus"] = 0
-    trainer_config["num_gpus_per_worker"] = 0
+    trainer_config["num_cpus_per_worker"] = 11
+    trainer_config["num_gpus"] = 0.5
+    trainer_config["num_gpus_per_worker"] = 0.5
     trainer_config["num_cpus_for_driver"] = 1
-    trainer_config["num_envs_per_worker"] = 1
+    trainer_config["num_envs_per_worker"] = 6
     trainer_config['entropy_coeff'] = config['entropy_coeff']
     trainer_config["env_config"] = env_config
     trainer_config["batch_mode"] = "complete_episodes"
@@ -189,8 +194,8 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "lambda_gae": lambda_gae
                 },
         resources_per_trial={
-            "cpu": 3,
-            "gpu": 0.0
+            "cpu": 12,
+            "gpu": 0.5
         },
         local_dir=local_dir
     )

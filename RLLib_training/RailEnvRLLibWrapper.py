@@ -89,12 +89,15 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
             agent_id_one_hot[i_agent] = 1
             o[i_agent] = [obs[i_agent], agent_id_one_hot, pred_obs]
 
-
+        self.old_obs = o
+        oo = dict()
+        for i_agent in range(len(self.env.agents)):
+            oo[i_agent] = [o[i_agent], o[i_agent][0], o[i_agent][1], o[i_agent][2]]
         self.rail = self.env.rail
         self.agents = self.env.agents
         self.agents_static = self.env.agents_static
         self.dev_obs_dict = self.env.dev_obs_dict
-        return obs
+        return oo
 
     def step(self, action_dict):
         obs, rewards, dones, infos = self.env.step(action_dict)
@@ -105,6 +108,8 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         o = dict()
         # print(self.agents_done)
         # print(dones)
+        predictions = self.env.predict()
+        pred_pos = np.concatenate([[x[:, 1:3]] for x in list(predictions.values())], axis=0)
 
         for i_agent in range(len(self.env.agents)):
             if i_agent not in self.agents_done:
@@ -153,15 +158,21 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         #
         #         d[agent] = dones[agent]
 
+        self.agents = self.env.agents
+        self.agents_static = self.env.agents_static
+        self.dev_obs_dict = self.env.dev_obs_dict
+        #print('Old OBS #####', self.old_obs)
+        oo = dict()
+        for i_agent in range(len(self.env.agents)):
+            if i_agent not in self.agents_done:
+                oo[i_agent] = [o[i_agent], self.old_obs[i_agent][0], self.old_obs[i_agent][1],
+                            self.old_obs[i_agent][2]]
+        
+        self.old_obs = o
         for agent, done in dones.items():
             if done and agent != '__all__':
                 self.agents_done.append(agent)
 
-        self.rail = self.env.rail
-        self.agents = self.env.agents
-        self.agents_static = self.env.agents_static
-        self.dev_obs_dict = self.env.dev_obs_dict
-        
         #print(obs)
         #return obs, rewards, dones, infos
         # oo = dict()
@@ -172,7 +183,7 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         # o['global_obs'] = np.ones((17, 17)) * 17
         # r['global_obs'] = 0
         # d['global_obs'] = True
-        return o, r, d, infos
+        return oo, r, d, infos
 
     def get_agent_handles(self):
         return self.env.get_agent_handles()
