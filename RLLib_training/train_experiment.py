@@ -3,6 +3,11 @@ import tempfile
 
 import gin
 import gym
+
+import gin
+
+from flatland.envs.generators import complex_rail_generator
+
 import ray
 from importlib_resources import path
 from ray import tune
@@ -12,6 +17,18 @@ from ray.rllib.agents.ppo.ppo import PPOTrainer as Trainer
 from ray.rllib.agents.ppo.ppo_policy_graph import PPOPolicyGraph as PolicyGraph
 from ray.rllib.models import ModelCatalog
 from ray.rllib.utils.seed import seed as set_seed
+from ray.tune.logger import pretty_print
+from baselines.RLLib_training.custom_preprocessors import CustomPreprocessor, ConvModelPreprocessor
+
+from baselines.RLLib_training.custom_models import ConvModelGlobalObs
+
+from flatland.envs.predictions import DummyPredictorForRailEnv
+gin.external_configurable(DummyPredictorForRailEnv)
+
+
+import ray
+import numpy as np
+
 from ray.tune.logger import UnifiedLogger
 from ray.tune.logger import pretty_print
 
@@ -21,6 +38,13 @@ from custom_preprocessors import CustomPreprocessor, ConvModelPreprocessor
 from flatland.envs.generators import complex_rail_generator
 from flatland.envs.observations import TreeObsForRailEnv, GlobalObsForRailEnv, \
     LocalObsForRailEnv, GlobalObsForRailEnvDirectionDependent
+import tempfile
+
+from ray import tune
+
+from ray.rllib.utils.seed import seed as set_seed
+from flatland.envs.observations import TreeObsForRailEnv, GlobalObsForRailEnv,\
+                                       LocalObsForRailEnv, GlobalObsForRailEnvDirectionDependent
 
 gin.external_configurable(TreeObsForRailEnv)
 gin.external_configurable(GlobalObsForRailEnv)
@@ -43,21 +67,25 @@ def train(config, reporter):
 
     set_seed(config['seed'], config['seed'], config['seed'])
 
-    config['map_width'] = 20
-    config['map_height'] = 10
-    config['n_agents'] = 8
-
     # Example configuration to generate a random rail
     env_config = {"width": config['map_width'],
                   "height": config['map_height'],
-                  "rail_generator": complex_rail_generator,
+                  "rail_generator": config["rail_generator"],
+                  "nr_extra": config["nr_extra"],
                   "number_of_agents": config['n_agents'],
                   "seed": config['seed'],
-                  "obs_builder": config['obs_builder']}
+                  "obs_builder": config['obs_builder'],
+                  "predictor": config["predictor"],
+                  "step_memory": config["step_memory"]}
 
     # Observation space and action space definitions
     if isinstance(config["obs_builder"], TreeObsForRailEnv):
-        obs_space = gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(111,))
+        if config['predictor'] is None:
+            obs_space = gym.spaces.Tuple((gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(147,)), ) * config['step_memory'])
+        else:
+            obs_space = gym.spaces.Tuple((gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(147,)),
+                                        gym.spaces.Box(low=0, high=1, shape=(config['n_agents'],)),
+                                        gym.spaces.Box(low=0, high=1, shape=(20, config['n_agents'])),) *config['step_memory'])
         preprocessor = "tree_obs_prep"
 
     elif isinstance(config["obs_builder"], GlobalObsForRailEnv):
@@ -92,7 +120,8 @@ def train(config, reporter):
     else:
         raise ValueError("Undefined observation space")
 
-    act_space = gym.spaces.Discrete(4)
+
+    act_space = gym.spaces.Discrete(5)
 
     # Dict with the different policies to train
     policy_graphs = {
@@ -115,9 +144,9 @@ def train(config, reporter):
     trainer_config["horizon"] = config['horizon']
 
     trainer_config["num_workers"] = 0
-    trainer_config["num_cpus_per_worker"] = 3
-    trainer_config["num_gpus"] = 0
-    trainer_config["num_gpus_per_worker"] = 0
+    trainer_config["num_cpus_per_worker"] = 4
+    trainer_config["num_gpus"] = 0.2
+    trainer_config["num_gpus_per_worker"] = 0.2
     trainer_config["num_cpus_for_driver"] = 1
     trainer_config["num_envs_per_worker"] = 1
     trainer_config['entropy_coeff'] = config['entropy_coeff']
@@ -126,6 +155,10 @@ def train(config, reporter):
     trainer_config['simple_optimizer'] = False
     trainer_config['postprocess_inputs'] = True
     trainer_config['log_level'] = 'WARN'
+    trainer_config['num_sgd_iter'] = 10
+    trainer_config['clip_param'] = 0.2
+    trainer_config['kl_coeff'] = config['kl_coeff']
+    trainer_config['lambda'] = config['lambda_gae']
 
     def logger_creator(conf):
         """Creates a Unified logger with a default logdir prefix
@@ -155,7 +188,9 @@ def train(config, reporter):
 @gin.configurable
 def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                    map_width, map_height, horizon, policy_folder_name, local_dir, obs_builder,
-                   entropy_coeff, seed, conv_model):
+                   entropy_coeff, seed, conv_model, rail_generator, nr_extra, kl_coeff, lambda_gae,
+                   predictor, step_memory):
+
     tune.run(
         train,
         name=name,
@@ -171,11 +206,17 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "obs_builder": obs_builder,
                 "entropy_coeff": entropy_coeff,
                 "seed": seed,
-                "conv_model": conv_model
+                "conv_model": conv_model,
+                "rail_generator": rail_generator,
+                "nr_extra": nr_extra,
+                "kl_coeff": kl_coeff,
+                "lambda_gae": lambda_gae,
+                "predictor": predictor,
+                "step_memory": step_memory
                 },
         resources_per_trial={
-            "cpu": 2,
-            "gpu": 0.0
+            "cpu": 5,
+            "gpu": 0.2
         },
         verbose=2,
         local_dir=local_dir
@@ -184,8 +225,8 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
 
 if __name__ == '__main__':
     gin.external_configurable(tune.grid_search)
-    with path('RLLib_training.experiment_configs.observation_benchmark_loaded_env', 'config.gin') as f:
+    with path('RLLib_training.experiment_configs.experiment_agent_memory', 'config.gin') as f:
         gin.parse_config_file(f)
 
-    dir = os.path.join(__file_dirname__, 'experiment_configs', 'observation_benchmark_loaded_env')
+    dir = os.path.join(__file_dirname__, 'experiment_configs', 'experiment_agent_memory')
     run_experiment(local_dir=dir)

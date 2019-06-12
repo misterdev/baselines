@@ -5,6 +5,7 @@ from collections import deque
 import numpy as np
 import torch
 
+from dueling_double_dqn import Agent
 from flatland.envs.generators import complex_rail_generator
 from flatland.envs.rail_env import RailEnv
 from flatland.utils.rendertools import RenderTool
@@ -41,17 +42,17 @@ env = RailEnv(width=15,
               rail_generator=complex_rail_generator(nr_start_goal=10, nr_extra=10, min_dist=10, max_dist=99999, seed=0),
               number_of_agents=1)
 
-"""
+
 
 env = RailEnv(width=10,
               height=20)
 env.load_resource('torch_training.railway', "complex_scene.pkl")
-
-env = RailEnv(width=15,
-              height=15,
-              rail_generator=complex_rail_generator(nr_start_goal=10, nr_extra=10, min_dist=10, max_dist=99999, seed=0),
+"""
+env = RailEnv(width=8,
+              height=8,
+              rail_generator=complex_rail_generator(nr_start_goal=5, nr_extra=5, min_dist=5, max_dist=99999, seed=0),
               number_of_agents=1)
-env.reset(False, False)
+env.reset(True, True)
 
 env_renderer = RenderTool(env, gl="PILSVG")
 handle = env.get_agent_handles()
@@ -73,10 +74,9 @@ action_prob = [0] * action_size
 agent_obs = [None] * env.get_num_agents()
 agent_next_obs = [None] * env.get_num_agents()
 agent = Agent(state_size, action_size, "FC", 0)
-# agent.qnetwork_local.load_state_dict(torch.load('./Nets/avoid_checkpoint15000.pth'))
+#agent.qnetwork_local.load_state_dict(torch.load('./Nets/avoid_checkpoint1500.pth'))
 
 demo = False
-
 
 def max_lt(seq, val):
     """
@@ -138,7 +138,7 @@ for trials in range(1, n_trials + 1):
                                                                 current_depth=0)
         data = norm_obs_clip(data)
         distance = norm_obs_clip(distance)
-
+        agent_data = np.clip(agent_data, -1, 1)
         obs[a] = np.concatenate((np.concatenate((data, distance)), agent_data))
     for i in range(2):
         time_obs.append(obs)
@@ -149,7 +149,7 @@ for trials in range(1, n_trials + 1):
     score = 0
     env_done = 0
     # Run episode
-    for step in range(360):
+    for step in range(100):
         if demo:
             env_renderer.renderEnv(show=True, show_observations=False)
         # print(step)
@@ -160,14 +160,15 @@ for trials in range(1, n_trials + 1):
             action = agent.act(agent_obs[a], eps=eps)
             action_prob[action] += 1
             action_dict.update({a: action})
-
         # Environment step
+
         next_obs, all_rewards, done, _ = env.step(action_dict)
         for a in range(env.get_num_agents()):
             data, distance, agent_data = env.obs_builder.split_tree(tree=np.array(next_obs[a]), num_features_per_node=7,
                                                                     current_depth=0)
             data = norm_obs_clip(data)
             distance = norm_obs_clip(distance)
+            agent_data = np.clip(agent_data, -1, 1)
             next_obs[a] = np.concatenate((np.concatenate((data, distance)), agent_data))
 
         time_obs.append(next_obs)
@@ -175,7 +176,6 @@ for trials in range(1, n_trials + 1):
         # Update replay buffer and train agent
         for a in range(env.get_num_agents()):
             agent_next_obs[a] = np.concatenate((time_obs[0][a], time_obs[1][a]))
-
             if done[a]:
                 final_obs[a] = agent_obs[a].copy()
                 final_obs_next[a] = agent_next_obs[a].copy()
@@ -217,4 +217,4 @@ for trials in range(1, n_trials + 1):
                 action_prob / np.sum(action_prob)))
         torch.save(agent.qnetwork_local.state_dict(),
                    os.path.join(__file_dirname__, 'Nets', 'avoid_checkpoint' + str(trials) + '.pth'))
-        action_prob = [1] * 4
+        action_prob = [1] * action_size
