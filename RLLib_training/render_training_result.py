@@ -50,11 +50,11 @@ ModelCatalog.register_custom_model("conv_model", ConvModelGlobalObs)
 ray.init()#object_store_memory=150000000000, redis_max_memory=30000000000)
 
 
-CHECKPOINT_PATH = '/home/guillaume/EPFL/Master_Thesis/flatland/baselines/RLLib_training/experiment_configs/' \
-                  'conv_model_test/ppo_policy_TreeObsForRailEnv_5_agents_conv_model_False_ial1g3w9/checkpoint_51/checkpoint-51'
+CHECKPOINT_PATH = '/home/guillaume/Desktop/distMAgent/env_complexity_benchmark/' \
+                  'ppo_policy_nr_extra_10_0qxx0qy_/checkpoint_1001/checkpoint-1001'
 
-N_EPISODES = 3
-N_STEPS_PER_EPISODE = 50
+N_EPISODES = 10
+N_STEPS_PER_EPISODE = 80
 
 
 def render_training_result(config):
@@ -62,22 +62,11 @@ def render_training_result(config):
 
     set_seed(config['seed'], config['seed'], config['seed'])
 
-    transition_probability = [15,  # empty cell - Case 0
-                              5,  # Case 1 - straight
-                              5,  # Case 2 - simple switch
-                              1,  # Case 3 - diamond crossing
-                              1,  # Case 4 - single slip
-                              1,  # Case 5 - double slip
-                              1,  # Case 6 - symmetrical
-                              0,  # Case 7 - dead end
-                              1,  # Case 1b (8)  - simple turn right
-                              1,  # Case 1c (9)  - simple turn left
-                              1]  # Case 2b (10) - simple switch mirrored
-
     # Example configuration to generate a random rail
     env_config = {"width": config['map_width'],
                   "height": config['map_height'],
-                  "rail_generator": complex_rail_generator,
+                  "rail_generator": config["rail_generator"],
+                  "nr_extra": config["nr_extra"],
                   "number_of_agents": config['n_agents'],
                   "seed": config['seed'],
                   "obs_builder": config['obs_builder']}
@@ -85,7 +74,7 @@ def render_training_result(config):
 
     # Observation space and action space definitions
     if isinstance(config["obs_builder"], TreeObsForRailEnv):
-        obs_space = gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(105,))
+        obs_space = gym.spaces.Box(low=-1, high=1, shape=(147,))
         preprocessor = "tree_obs_prep"
 
     elif isinstance(config["obs_builder"], GlobalObsForRailEnv):
@@ -154,6 +143,8 @@ def render_training_result(config):
     trainer_config['simple_optimizer'] = False
     trainer_config['postprocess_inputs'] = True
     trainer_config['log_level'] = 'WARN'
+    trainer_config['num_sgd_iter'] = 10
+    trainer_config['clip_param'] = 0.2
 
     env = RailEnvRLLibWrapper(env_config)
 
@@ -163,21 +154,29 @@ def render_training_result(config):
 
     policy = trainer.get_policy(config['policy_folder_name'].format(**locals()))
 
-    env_renderer = RenderTool(env, gl="PIL", show=True)
+
+    preprocessor = CustomPreprocessor(gym.spaces.Box(low=-1, high=1, shape=(147,)))
+    env_renderer = RenderTool(env, gl="PIL")
     for episode in range(N_EPISODES):
         observation = env.reset()
         for i in range(N_STEPS_PER_EPISODE):
-
-            action, _, infos = policy.compute_actions(list(observation.values()), [])
-            env_renderer.renderEnv(show=True, frames=True, iEpisode=episode, iStep=i,
-                                   action_dict=action)
+            preprocessed_obs = []
+            for obs in observation.values():
+                preprocessed_obs.append(preprocessor.transform(obs))
+            action, _, infos = policy.compute_actions(preprocessed_obs, [])
             logits = infos['behaviour_logits']
             actions = dict()
             for j, logit in enumerate(logits):
                 actions[j] = np.argmax(logit)
-
+            # for j, act in enumerate(action):
+                # actions[j] = act
             time.sleep(1)
-            observation, _, _, _ = env.step(action)
+            print(actions, logits)
+            # print(action, print(infos['behaviour_logits']))
+            env_renderer.renderEnv(show=True, frames=True, iEpisode=episode, iStep=i,
+                                   action_dict=list(actions.values()))
+
+            observation, _, _, _ = env.step(actions)
 
     env_renderer.close_window()
 
@@ -185,7 +184,7 @@ def render_training_result(config):
 @gin.configurable
 def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                    map_width, map_height, horizon, policy_folder_name, local_dir, obs_builder,
-                   entropy_coeff, seed, conv_model):
+                   entropy_coeff, seed, conv_model, rail_generator, nr_extra):
 
     render_training_result(
         config={"n_agents": n_agents,
@@ -199,12 +198,15 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "obs_builder": obs_builder,
                 "entropy_coeff": entropy_coeff,
                 "seed": seed,
-                "conv_model": conv_model
-                })
+                "conv_model": conv_model,
+                "rail_generator": rail_generator,
+                "nr_extra": 10# nr_extra
+                }
+    )
 
 
 if __name__ == '__main__':
     gin.external_configurable(tune.grid_search)
-    dir = '/home/guillaume/EPFL/Master_Thesis/flatland/baselines/RLLib_training/experiment_configs/conv_model_test'  # To Modify
+    dir = '/home/guillaume/EPFL/Master_Thesis/flatland/baselines/RLLib_training/experiment_configs/env_complexity_benchmark'  # To Modify
     gin.parse_config_file(dir + '/config.gin')
     run_experiment(local_dir=dir)
