@@ -18,6 +18,9 @@ from baselines.RLLib_training.custom_preprocessors import CustomPreprocessor, Co
 
 from baselines.RLLib_training.custom_models import ConvModelGlobalObs
 
+from flatland.envs.predictions import DummyPredictorForRailEnv
+gin.external_configurable(DummyPredictorForRailEnv)
+
 
 import ray
 import numpy as np
@@ -57,16 +60,18 @@ def train(config, reporter):
                   "nr_extra": config["nr_extra"],
                   "number_of_agents": config['n_agents'],
                   "seed": config['seed'],
-                  "obs_builder": config['obs_builder']}
+                  "obs_builder": config['obs_builder'],
+                  "predictor": config["predictor"],
+                  "step_memory": config["step_memory"]}
 
     # Observation space and action space definitions
     if isinstance(config["obs_builder"], TreeObsForRailEnv):
-        obs_space = gym.spaces.Tuple((gym.spaces.Box(low=0, high=float('inf'), shape=(147,)),
-                                     gym.spaces.Box(low=0, high=1, shape=(config['n_agents'],)),
-                                     gym.spaces.Box(low=0, high=1, shape=(20, config['n_agents'])),
-                                     gym.spaces.Box(low=0, high=float('inf'), shape=(147,)),
-                                     gym.spaces.Box(low=0, high=1, shape=(config['n_agents'],)),
-                                     gym.spaces.Box(low=0, high=1, shape=(20, config['n_agents']))))
+        if config['predictor'] is None:
+            obs_space = gym.spaces.Tuple((gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(147,)), ) * config['step_memory'])
+        else:
+            obs_space = gym.spaces.Tuple((gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(147,)),
+                                        gym.spaces.Box(low=0, high=1, shape=(config['n_agents'],)),
+                                        gym.spaces.Box(low=0, high=1, shape=(20, config['n_agents'])),) *config['step_memory'])
         preprocessor = "tree_obs_prep"
 
     elif isinstance(config["obs_builder"], GlobalObsForRailEnv):
@@ -126,11 +131,11 @@ def train(config, reporter):
     trainer_config["horizon"] = config['horizon']
 
     trainer_config["num_workers"] = 0
-    trainer_config["num_cpus_per_worker"] = 11
-    trainer_config["num_gpus"] = 0.5
-    trainer_config["num_gpus_per_worker"] = 0.5
+    trainer_config["num_cpus_per_worker"] = 4
+    trainer_config["num_gpus"] = 0.2
+    trainer_config["num_gpus_per_worker"] = 0.2
     trainer_config["num_cpus_for_driver"] = 1
-    trainer_config["num_envs_per_worker"] = 6
+    trainer_config["num_envs_per_worker"] = 1
     trainer_config['entropy_coeff'] = config['entropy_coeff']
     trainer_config["env_config"] = env_config
     trainer_config["batch_mode"] = "complete_episodes"
@@ -170,7 +175,8 @@ def train(config, reporter):
 @gin.configurable
 def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                    map_width, map_height, horizon, policy_folder_name, local_dir, obs_builder,
-                   entropy_coeff, seed, conv_model, rail_generator, nr_extra, kl_coeff, lambda_gae):
+                   entropy_coeff, seed, conv_model, rail_generator, nr_extra, kl_coeff, lambda_gae,
+                   predictor, step_memory):
 
     tune.run(
         train,
@@ -191,11 +197,13 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "rail_generator": rail_generator,
                 "nr_extra": nr_extra,
                 "kl_coeff": kl_coeff,
-                "lambda_gae": lambda_gae
+                "lambda_gae": lambda_gae,
+                "predictor": predictor,
+                "step_memory": step_memory
                 },
         resources_per_trial={
-            "cpu": 12,
-            "gpu": 0.5
+            "cpu": 5,
+            "gpu": 0.2
         },
         local_dir=local_dir
     )
@@ -203,6 +211,6 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
 
 if __name__ == '__main__':
     gin.external_configurable(tune.grid_search)
-    dir = '/home/guillaume/flatland/baselines/RLLib_training/experiment_configs/env_size_benchmark_3_agents'  # To Modify
+    dir = '/home/guillaume/flatland/baselines/RLLib_training/experiment_configs/experiment_agent_memory'  # To Modify
     gin.parse_config_file(dir + '/config.gin')
     run_experiment(local_dir=dir)

@@ -7,8 +7,8 @@ run_experiment.map_width = 15
 run_experiment.map_height = 15
 run_experiment.n_agents = 8
 run_experiment.rail_generator = "complex_rail_generator"
-run_experiment.nr_extra = {"grid_search": [0, 5, 10, 20, 30, 40, 50, 60]}
-run_experiment.policy_folder_name = "ppo_policy_nr_extra_{config[nr_extra]}_map_width_{config[map_width]}_"
+run_experiment.nr_extra = 10#{"grid_search": [0, 5, 10, 20, 30, 40, 50, 60]}
+run_experiment.policy_folder_name = "ppo_policy_nr_extra_{config[nr_extra]}_"
 
 run_experiment.horizon = 50
 run_experiment.seed = 123
