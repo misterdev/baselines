@@ -1,9 +1,9 @@
-from flatland.envs.rail_env import RailEnv
-from ray.rllib.env.multi_agent_env import MultiAgentEnv
-from flatland.envs.observations import TreeObsForRailEnv
-from ray.rllib.utils.seed import seed as set_seed
-from flatland.envs.generators import complex_rail_generator, random_rail_generator
 import numpy as np
+from ray.rllib.env.multi_agent_env import MultiAgentEnv
+from ray.rllib.utils.seed import seed as set_seed
+
+from flatland.envs.generators import complex_rail_generator, random_rail_generator
+from flatland.envs.rail_env import RailEnv
 
 
 class RailEnvRLLibWrapper(MultiAgentEnv):
@@ -20,20 +20,21 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
 
         if config['rail_generator'] == "complex_rail_generator":
             self.rail_generator = complex_rail_generator(nr_start_goal=config['number_of_agents'], min_dist=5,
-                                                          nr_extra=config['nr_extra'], seed=config['seed'] * (1+vector_index))
+                                                         nr_extra=config['nr_extra'],
+                                                         seed=config['seed'] * (1 + vector_index))
         elif config['rail_generator'] == "random_rail_generator":
             self.rail_generator = random_rail_generator()
         elif config['rail_generator'] == "load_env":
             self.predefined_env = True
 
         else:
-            raise(ValueError, f'Unknown rail generator: {config["rail_generator"]}')
+            raise (ValueError, f'Unknown rail generator: {config["rail_generator"]}')
 
-        set_seed(config['seed'] * (1+vector_index))
+        set_seed(config['seed'] * (1 + vector_index))
         self.env = RailEnv(width=config["width"], height=config["height"],
-                number_of_agents=config["number_of_agents"],
-                obs_builder_object=config['obs_builder'], rail_generator=self.rail_generator,
-                prediction_builder_object=config['predictor'])
+                           number_of_agents=config["number_of_agents"],
+                           obs_builder_object=config['obs_builder'], rail_generator=self.rail_generator,
+                           prediction_builder_object=config['predictor'])
 
         if self.predefined_env:
             self.env.load(config['load_env_path'])
@@ -190,8 +191,8 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
                 elif collision_info[1] == 0:
                     # In this case, the other agent (agent 2) was on the same cell at t-1
                     # There is a collision if agent 2 is at t, on the cell where was agent 1 at t-1
-                    coord_agent_1_t_minus_1 = pred_pos[agent_handle, time_offset-1, 0] + \
-                                          1000 * pred_pos[agent_handle, time_offset, 1]
+                    coord_agent_1_t_minus_1 = pred_pos[agent_handle, time_offset - 1, 0] + \
+                                              1000 * pred_pos[agent_handle, time_offset, 1]
                     coord_agent_2_t = coord_other_agents[collision_info[0], 1]
                     if coord_agent_1_t_minus_1 == coord_agent_2_t:
                         pred_obs[time_offset, collision_info[0] + 1 * (collision_info[0] >= agent_handle)] = 1
@@ -200,7 +201,7 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
                     # In this case, the other agent (agent 2) will be on the same cell at t+1
                     # There is a collision if agent 2 is at t, on the cell where will be agent 1 at t+1
                     coord_agent_1_t_plus_1 = pred_pos[agent_handle, time_offset + 1, 0] + \
-                                              1000 * pred_pos[agent_handle, time_offset, 1]
+                                             1000 * pred_pos[agent_handle, time_offset, 1]
                     coord_agent_2_t = coord_other_agents[collision_info[0], 1]
                     if coord_agent_1_t_plus_1 == coord_agent_2_t:
                         pred_obs[time_offset, collision_info[0] + 1 * (collision_info[0] >= agent_handle)] = 1
