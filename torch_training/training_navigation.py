@@ -77,7 +77,7 @@ action_prob = [0] * action_size
 agent_obs = [None] * env.get_num_agents()
 agent_next_obs = [None] * env.get_num_agents()
 agent = Agent(state_size, action_size, "FC", 0)
-agent.qnetwork_local.load_state_dict(torch.load('./Nets/avoid_checkpoint15000.pth'))
+agent.qnetwork_local.load_state_dict(torch.load(os.path.join(__file_dirname__, 'Nets', 'avoid_checkpoint15000.pth')))
 
 demo = True
 
