@@ -6,6 +6,8 @@ from flatland.envs.generators import complex_rail_generator, random_rail_generat
 import numpy as np
 
 
+
+
 class RailEnvRLLibWrapper(MultiAgentEnv):
 
     def __init__(self, config):
@@ -25,6 +27,7 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
             self.rail_generator = random_rail_generator()
         elif config['rail_generator'] == "load_env":
             self.predefined_env = True
+            self.rail_generator = random_rail_generator()
 
         else:
             raise(ValueError, f'Unknown rail generator: {config["rail_generator"]}')
@@ -36,8 +39,8 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
                 prediction_builder_object=config['predictor'])
 
         if self.predefined_env:
-            self.env.load(config['load_env_path'])
-                # '/home/guillaume/EPFL/Master_Thesis/flatland/baselines/torch_training/railway/complex_scene.pkl')
+            #self.env.load(config['load_env_path'])
+            self.env.load('/home/guillaume/EPFL/Master_Thesis/flatland/baselines/torch_training/railway/complex_scene.pkl')
 
         self.width = self.env.width
         self.height = self.env.height

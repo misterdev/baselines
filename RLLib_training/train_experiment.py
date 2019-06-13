@@ -48,6 +48,21 @@ ModelCatalog.register_custom_model("conv_model", ConvModelGlobalObs)
 ray.init()#object_store_memory=150000000000, redis_max_memory=30000000000)
 
 
+def on_episode_start(info):
+    episode = info['episode']
+    map_width = info['env'].envs[0].width
+    map_height = info['env'].envs[0].height
+    episode.horizon = map_width + map_height
+    
+
+def on_episode_step(info):
+    episode = info['episode']
+
+
+def on_episode_end(info):
+    episode = info['episode']
+
+
 def train(config, reporter):
     print('Init Env')
 
