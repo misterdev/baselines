@@ -52,25 +52,25 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         else:
             obs = self.env.reset()
 
-        predictions = self.env.predict()
-        if predictions != {}:
-            # pred_pos is a 3 dimensions array (N_Agents, T_pred, 2) containing x and y coordinates of
-            # agents at each time step
-            pred_pos = np.concatenate([[x[:, 1:3]] for x in list(predictions.values())], axis=0)
-            pred_dir = [x[:, 2] for x in list(predictions.values())]
+        # predictions = self.env.predict()
+        # if predictions != {}:
+        #     # pred_pos is a 3 dimensions array (N_Agents, T_pred, 2) containing x and y coordinates of
+        #     # agents at each time step
+        #     pred_pos = np.concatenate([[x[:, 1:3]] for x in list(predictions.values())], axis=0)
+        #     pred_dir = [x[:, 2] for x in list(predictions.values())]
 
         o = dict()
 
         for i_agent in range(len(self.env.agents)):
 
-            if predictions != {}:
-                pred_obs = self.get_prediction_as_observation(pred_pos, pred_dir, i_agent)
-
-                agent_id_one_hot = np.zeros(len(self.env.agents))
-                agent_id_one_hot[i_agent] = 1
-                o[i_agent] = [obs[i_agent], agent_id_one_hot, pred_obs]
-            else:
-                o[i_agent] = obs[i_agent]
+            # if predictions != {}:
+            #     pred_obs = self.get_prediction_as_observation(pred_pos, pred_dir, i_agent)
+            #
+            #     agent_id_one_hot = np.zeros(len(self.env.agents))
+            #     agent_id_one_hot[i_agent] = 1
+            #     o[i_agent] = [obs[i_agent], agent_id_one_hot, pred_obs]
+            # else:
+            o[i_agent] = obs[i_agent]
 
         # needed for the renderer
         self.rail = self.env.rail
@@ -95,23 +95,23 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         r = dict()
         o = dict()
 
-        predictions = self.env.predict()
-        if predictions != {}:
-            # pred_pos is a 3 dimensions array (N_Agents, T_pred, 2) containing x and y coordinates of
-            # agents at each time step
-            pred_pos = np.concatenate([[x[:, 1:3]] for x in list(predictions.values())], axis=0)
-            pred_dir = [x[:, 2] for x in list(predictions.values())]
+        # predictions = self.env.predict()
+        # if predictions != {}:
+        #     # pred_pos is a 3 dimensions array (N_Agents, T_pred, 2) containing x and y coordinates of
+        #     # agents at each time step
+        #     pred_pos = np.concatenate([[x[:, 1:3]] for x in list(predictions.values())], axis=0)
+        #     pred_dir = [x[:, 2] for x in list(predictions.values())]
 
         for i_agent in range(len(self.env.agents)):
             if i_agent not in self.agents_done:
 
-                if predictions != {}:
-                    pred_obs = self.get_prediction_as_observation(pred_pos, pred_dir, i_agent)
-                    agent_id_one_hot = np.zeros(len(self.env.agents))
-                    agent_id_one_hot[i_agent] = 1
-                    o[i_agent] = [obs[i_agent], agent_id_one_hot, pred_obs]
-                else:
-                    o[i_agent] = obs[i_agent]
+                # if predictions != {}:
+                #     pred_obs = self.get_prediction_as_observation(pred_pos, pred_dir, i_agent)
+                #     agent_id_one_hot = np.zeros(len(self.env.agents))
+                #     agent_id_one_hot[i_agent] = 1
+                #     o[i_agent] = [obs[i_agent], agent_id_one_hot, pred_obs]
+                # else:
+                o[i_agent] = obs[i_agent]
                 r[i_agent] = rewards[i_agent]
                 d[i_agent] = dones[i_agent]
 

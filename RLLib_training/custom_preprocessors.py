@@ -23,7 +23,7 @@ def min_lt(seq, val):
     min = np.inf
     idx = len(seq) - 1
     while idx >= 0:
-        if seq[idx] > val and seq[idx] < min:
+        if seq[idx] >= val and seq[idx] < min:
             min = seq[idx]
         idx -= 1
     return min
@@ -38,7 +38,8 @@ def norm_obs_clip(obs, clip_min=-1, clip_max=1):
     :return: returnes normalized and clipped observatoin
     """
     max_obs = max(1, max_lt(obs, 1000))
-    min_obs = max(0, min_lt(obs, 0))
+    min_obs = min(max_obs, min_lt(obs, 0))
+
     if max_obs == min_obs:
         return np.clip(np.array(obs) / max_obs, clip_min, clip_max)
     norm = np.abs(max_obs - min_obs)
@@ -49,12 +50,16 @@ def norm_obs_clip(obs, clip_min=-1, clip_max=1):
 
 class CustomPreprocessor(Preprocessor):
     def _init_shape(self, obs_space, options):
+        return sum([space.shape[0] for space in obs_space]),
         # return (sum([space.shape[0] for space in obs_space]), )
-        return ((sum([space.shape[0] for space in obs_space[:2]]) + obs_space[2].shape[0] * obs_space[2].shape[1]),)
+        # return ((sum([space.shape[0] for space in obs_space[:2]]) + obs_space[2].shape[0] * obs_space[2].shape[1]),)
 
     def transform(self, observation):
+        return norm_obs_clip(observation)
+        return np.concatenate([norm_obs_clip(observation[0]), norm_obs_clip(observation[1])])
         # if len(observation) == 111:
         # return np.concatenate([norm_obs_clip(obs) for obs in observation])
+        # print('OBSERVATION:', observation, len(observation[0]))
         return np.concatenate([norm_obs_clip(observation[0]), observation[1], observation[
             2].flatten()])  #, norm_obs_clip(observation[1]), observation[2], observation[3].flatten()])
         #one_hot = observation[-3:]
