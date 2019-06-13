@@ -1,38 +1,32 @@
-from baselines.RLLib_training.RailEnvRLLibWrapper import RailEnvRLLibWrapper
-import gym
+import os
 
 import gin
-
-from flatland.envs.generators import complex_rail_generator
-
+import gym
+from flatland.envs.predictions import DummyPredictorForRailEnv
+from importlib_resources import path
 # Import PPO trainer: we can replace these imports by any other trainer from RLLib.
 from ray.rllib.agents.ppo.ppo import DEFAULT_CONFIG
 from ray.rllib.agents.ppo.ppo import PPOTrainer as Trainer
-# from baselines.CustomPPOTrainer import PPOTrainer as Trainer
 from ray.rllib.agents.ppo.ppo_policy_graph import PPOPolicyGraph as PolicyGraph
-# from baselines.CustomPPOPolicyGraph import CustomPPOPolicyGraph as PolicyGraph
-
 from ray.rllib.models import ModelCatalog
-from ray.tune.logger import pretty_print
-from baselines.RLLib_training.custom_preprocessors import CustomPreprocessor, ConvModelPreprocessor
 
-from baselines.RLLib_training.custom_models import ConvModelGlobalObs
-
-from flatland.envs.predictions import DummyPredictorForRailEnv
 gin.external_configurable(DummyPredictorForRailEnv)
 
-
 import ray
-import numpy as np
 
 from ray.tune.logger import UnifiedLogger
+from ray.tune.logger import pretty_print
+
+from RailEnvRLLibWrapper import RailEnvRLLibWrapper
+from custom_models import ConvModelGlobalObs
+from custom_preprocessors import CustomPreprocessor, ConvModelPreprocessor
 import tempfile
 
 from ray import tune
 
 from ray.rllib.utils.seed import seed as set_seed
-from flatland.envs.observations import TreeObsForRailEnv, GlobalObsForRailEnv,\
-                                       LocalObsForRailEnv, GlobalObsForRailEnvDirectionDependent
+from flatland.envs.observations import TreeObsForRailEnv, GlobalObsForRailEnv, \
+    LocalObsForRailEnv, GlobalObsForRailEnvDirectionDependent
 
 gin.external_configurable(TreeObsForRailEnv)
 gin.external_configurable(GlobalObsForRailEnv)
@@ -45,7 +39,9 @@ ModelCatalog.register_custom_preprocessor("tree_obs_prep", CustomPreprocessor)
 ModelCatalog.register_custom_preprocessor("global_obs_prep", TupleFlatteningPreprocessor)
 ModelCatalog.register_custom_preprocessor("conv_obs_prep", ConvModelPreprocessor)
 ModelCatalog.register_custom_model("conv_model", ConvModelGlobalObs)
-ray.init()#object_store_memory=150000000000, redis_max_memory=30000000000)
+ray.init()  # object_store_memory=150000000000, redis_max_memory=30000000000)
+
+__file_dirname__ = os.path.dirname(os.path.realpath(__file__))
 
 
 def train(config, reporter):
@@ -67,11 +63,13 @@ def train(config, reporter):
     # Observation space and action space definitions
     if isinstance(config["obs_builder"], TreeObsForRailEnv):
         if config['predictor'] is None:
-            obs_space = gym.spaces.Tuple((gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(147,)), ) * config['step_memory'])
+            obs_space = gym.spaces.Tuple(
+                (gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(147,)),) * config['step_memory'])
         else:
             obs_space = gym.spaces.Tuple((gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(147,)),
-                                        gym.spaces.Box(low=0, high=1, shape=(config['n_agents'],)),
-                                        gym.spaces.Box(low=0, high=1, shape=(20, config['n_agents'])),) *config['step_memory'])
+                                          gym.spaces.Box(low=0, high=1, shape=(config['n_agents'],)),
+                                          gym.spaces.Box(low=0, high=1, shape=(20, config['n_agents'])),) * config[
+                                             'step_memory'])
         preprocessor = "tree_obs_prep"
 
     elif isinstance(config["obs_builder"], GlobalObsForRailEnv):
@@ -106,7 +104,6 @@ def train(config, reporter):
     else:
         raise ValueError("Undefined observation space")
 
-
     act_space = gym.spaces.Discrete(5)
 
     # Dict with the different policies to train
@@ -117,7 +114,6 @@ def train(config, reporter):
     def policy_mapping_fn(agent_id):
         return config['policy_folder_name'].format(**locals())
 
-
     # Trainer configuration
     trainer_config = DEFAULT_CONFIG.copy()
     if config['conv_model']:
@@ -126,8 +122,8 @@ def train(config, reporter):
         trainer_config['model'] = {"fcnet_hiddens": config['hidden_sizes'], "custom_preprocessor": preprocessor}
 
     trainer_config['multiagent'] = {"policy_graphs": policy_graphs,
-                                  "policy_mapping_fn": policy_mapping_fn,
-                                  "policies_to_train": list(policy_graphs.keys())}
+                                    "policy_mapping_fn": policy_mapping_fn,
+                                    "policies_to_train": list(policy_graphs.keys())}
     trainer_config["horizon"] = config['horizon']
 
     trainer_config["num_workers"] = 0
@@ -177,7 +173,6 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                    map_width, map_height, horizon, policy_folder_name, local_dir, obs_builder,
                    entropy_coeff, seed, conv_model, rail_generator, nr_extra, kl_coeff, lambda_gae,
                    predictor, step_memory):
-
     tune.run(
         train,
         name=name,
@@ -205,12 +200,15 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
             "cpu": 5,
             "gpu": 0.2
         },
+        verbose=2,
         local_dir=local_dir
     )
 
 
 if __name__ == '__main__':
     gin.external_configurable(tune.grid_search)
-    dir = '/home/guillaume/flatland/baselines/RLLib_training/experiment_configs/experiment_agent_memory'  # To Modify
-    gin.parse_config_file(dir + '/config.gin')
+    with path('RLLib_training.experiment_configs.experiment_agent_memory', 'config.gin') as f:
+        gin.parse_config_file(f)
+
+    dir = os.path.join(__file_dirname__, 'experiment_configs', 'experiment_agent_memory')
     run_experiment(local_dir=dir)
