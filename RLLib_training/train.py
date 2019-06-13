@@ -5,13 +5,13 @@ import numpy as np
 import ray
 import ray.rllib.agents.ppo.ppo as ppo
 from RailEnvRLLibWrapper import RailEnvRLLibWrapper
+from flatland.envs.generators import complex_rail_generator
 from ray.rllib.agents.ppo.ppo import PPOTrainer
 from ray.rllib.agents.ppo.ppo_policy_graph import PPOPolicyGraph
 from ray.rllib.models import ModelCatalog
 from ray.tune.logger import pretty_print
 
 from RLLib_training.custom_preprocessors import CustomPreprocessor
-from flatland.envs.generators import complex_rail_generator
 
 ModelCatalog.register_custom_preprocessor("my_prep", CustomPreprocessor)
 ray.init()

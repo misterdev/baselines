@@ -2,14 +2,13 @@ import os
 
 import gin
 import gym
+from flatland.envs.predictions import DummyPredictorForRailEnv
 from importlib_resources import path
 # Import PPO trainer: we can replace these imports by any other trainer from RLLib.
 from ray.rllib.agents.ppo.ppo import DEFAULT_CONFIG
 from ray.rllib.agents.ppo.ppo import PPOTrainer as Trainer
 from ray.rllib.agents.ppo.ppo_policy_graph import PPOPolicyGraph as PolicyGraph
 from ray.rllib.models import ModelCatalog
-
-from flatland.envs.predictions import DummyPredictorForRailEnv
 
 gin.external_configurable(DummyPredictorForRailEnv)
 

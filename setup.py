@@ -4,11 +4,12 @@ from setuptools import setup, find_packages
 
 # TODO: setup does not support installation from url, move to requirements*.txt
 # TODO: @master as soon as mr is merged on flatland.
-os.system('pip install git+https://gitlab.aicrowd.com/flatland/flatland.git@57-access-resources-through-importlib_resources')
+os.system(
+    'pip install git+https://gitlab.aicrowd.com/flatland/flatland.git@57-access-resources-through-importlib_resources')
 
 install_reqs = []
 # TODO: include requirements_RLLib_training.txt
-requirements_paths = ['requirements_torch_training.txt'] #, 'requirements_RLLib_training.txt']
+requirements_paths = ['requirements_torch_training.txt']  # , 'requirements_RLLib_training.txt']
 for requirements_path in requirements_paths:
     with open(requirements_path, 'r') as f:
         install_reqs += [

@@ -1,9 +1,8 @@
 import numpy as np
-from ray.rllib.env.multi_agent_env import MultiAgentEnv
-from ray.rllib.utils.seed import seed as set_seed
-
 from flatland.envs.generators import complex_rail_generator, random_rail_generator
 from flatland.envs.rail_env import RailEnv
+from ray.rllib.env.multi_agent_env import MultiAgentEnv
+from ray.rllib.utils.seed import seed as set_seed
 
 
 class RailEnvRLLibWrapper(MultiAgentEnv):
