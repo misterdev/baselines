@@ -53,6 +53,7 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         else:
             obs = self.env.reset()
 
+
         # predictions = self.env.predict()
         # if predictions != {}:
         #     # pred_pos is a 3 dimensions array (N_Agents, T_pred, 2) containing x and y coordinates of
@@ -63,7 +64,8 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         o = dict()
 
         for i_agent in range(len(self.env.agents)):
-
+            data, distance, agent_data = self.env.obs_builder.split_tree(tree=np.array(obs[i_agent]),
+                                                                         num_features_per_node=8, current_depth=0)
             # if predictions != {}:
             #     pred_obs = self.get_prediction_as_observation(pred_pos, pred_dir, i_agent)
             #
@@ -71,7 +73,8 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
             #     agent_id_one_hot[i_agent] = 1
             #     o[i_agent] = [obs[i_agent], agent_id_one_hot, pred_obs]
             # else:
-            o[i_agent] = obs[i_agent]
+
+            o[i_agent] = [data, distance, agent_data]
 
         # needed for the renderer
         self.rail = self.env.rail
@@ -105,6 +108,8 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
 
         for i_agent in range(len(self.env.agents)):
             if i_agent not in self.agents_done:
+                data, distance, agent_data = self.env.obs_builder.split_tree(tree=np.array(obs[i_agent]),
+                                                                             num_features_per_node=8, current_depth=0)
 
                 # if predictions != {}:
                 #     pred_obs = self.get_prediction_as_observation(pred_pos, pred_dir, i_agent)
@@ -112,7 +117,7 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
                 #     agent_id_one_hot[i_agent] = 1
                 #     o[i_agent] = [obs[i_agent], agent_id_one_hot, pred_obs]
                 # else:
-                o[i_agent] = obs[i_agent]
+                o[i_agent] = [data, distance, agent_data]
                 r[i_agent] = rewards[i_agent]
                 d[i_agent] = dones[i_agent]
 

@@ -55,6 +55,12 @@ class CustomPreprocessor(Preprocessor):
         # return ((sum([space.shape[0] for space in obs_space[:2]]) + obs_space[2].shape[0] * obs_space[2].shape[1]),)
 
     def transform(self, observation):
+        print('OBSSSSSSSSSSSSSSSSSs', observation, observation.shape)
+        data = norm_obs_clip(observation[0])
+        distance = norm_obs_clip(observation[1])
+        agent_data = np.clip(observation[2], -1, 1)
+
+        return np.concatenate((np.concatenate((data, distance)), agent_data))
         return norm_obs_clip(observation)
         return np.concatenate([norm_obs_clip(observation[0]), norm_obs_clip(observation[1])])
         # if len(observation) == 111:
