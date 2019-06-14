@@ -62,8 +62,8 @@ def on_episode_end(info):
     episode = info['episode']
     score = 0
     for k, v in episode._agent_reward_history.items():
-        score += np.mean(v)
-    score /= (len(episode._agent_reward_history) * 1.5 * episode.horizon)
+        score += np.sum(v)
+    score /= (len(episode._agent_reward_history) * 3 * episode.horizon)
     episode.custom_metrics["score"] = score
 
 def train(config, reporter):
@@ -80,6 +80,7 @@ def train(config, reporter):
                   "number_of_agents": config['n_agents'],
                   "seed": config['seed'],
                   "obs_builder": config['obs_builder'],
+                  "min_dist": config['min_dist'],
                   # "predictor": config["predictor"],
                   "step_memory": config["step_memory"]}
 
@@ -154,9 +155,9 @@ def train(config, reporter):
     trainer_config["horizon"] = 1.5 * (config['map_width'] + config['map_height'])#config['horizon']
 
     trainer_config["num_workers"] = 0
-    trainer_config["num_cpus_per_worker"] = 4
-    trainer_config["num_gpus"] = 0.2
-    trainer_config["num_gpus_per_worker"] = 0.2
+    trainer_config["num_cpus_per_worker"] = 7
+    trainer_config["num_gpus"] = 0.0
+    trainer_config["num_gpus_per_worker"] = 0.0
     trainer_config["num_cpus_for_driver"] = 1
     trainer_config["num_envs_per_worker"] = 1
     trainer_config['entropy_coeff'] = config['entropy_coeff']
@@ -203,7 +204,7 @@ def train(config, reporter):
 def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                    map_width, map_height, horizon, policy_folder_name, local_dir, obs_builder,
                    entropy_coeff, seed, conv_model, rail_generator, nr_extra, kl_coeff, lambda_gae,
-                   step_memory):
+                   step_memory, min_dist):
     tune.run(
         train,
         name=name,
@@ -224,11 +225,12 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "nr_extra": nr_extra,
                 "kl_coeff": kl_coeff,
                 "lambda_gae": lambda_gae,
+                "min_dist": min_dist,
                 # "predictor": predictor,
                 "step_memory": step_memory
                 },
         resources_per_trial={
-            "cpu": 2,
+            "cpu": 8,
             "gpu": 0
         },
         verbose=2,
@@ -240,7 +242,7 @@ if __name__ == '__main__':
     gin.external_configurable(tune.grid_search)
     # with path('RLLib_training.experiment_configs.n_agents_experiment', 'config.gin') as f:
     #     gin.parse_config_file(f)
-    gin.parse_config_file('/home/guillaume/EPFL/Master_Thesis/flatland/baselines/RLLib_training/experiment_configs/predictions_test/config.gin')
-    dir = '/home/guillaume/EPFL/Master_Thesis/flatland/baselines/RLLib_training/experiment_configs/predictions_test'
+    gin.parse_config_file('/home/guillaume/flatland/baselines/RLLib_training/experiment_configs/score_metric_test/config.gin')
+    dir = '/home/guillaume/flatland/baselines/RLLib_training/experiment_configs/score_metric_test'
     # dir = os.path.join(__file_dirname__, 'experiment_configs', 'experiment_agent_memory')
     run_experiment(local_dir=dir)

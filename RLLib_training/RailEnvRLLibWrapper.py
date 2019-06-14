@@ -20,7 +20,8 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         self.predefined_env = False
 
         if config['rail_generator'] == "complex_rail_generator":
-            self.rail_generator = complex_rail_generator(nr_start_goal=config['number_of_agents'], min_dist=5,
+            self.rail_generator = complex_rail_generator(nr_start_goal=config['number_of_agents'],
+                                                         min_dist=config['min_dist'],
                                                          nr_extra=config['nr_extra'],
                                                          seed=config['seed'] * (1 + vector_index))
         elif config['rail_generator'] == "random_rail_generator":
