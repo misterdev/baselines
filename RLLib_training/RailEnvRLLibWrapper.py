@@ -5,6 +5,8 @@ from ray.rllib.env.multi_agent_env import MultiAgentEnv
 from ray.rllib.utils.seed import seed as set_seed
 
 
+
+
 class RailEnvRLLibWrapper(MultiAgentEnv):
 
     def __init__(self, config):
@@ -18,13 +20,15 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         self.predefined_env = False
 
         if config['rail_generator'] == "complex_rail_generator":
-            self.rail_generator = complex_rail_generator(nr_start_goal=config['number_of_agents'], min_dist=5,
+            self.rail_generator = complex_rail_generator(nr_start_goal=config['number_of_agents'],
+                                                         min_dist=config['min_dist'],
                                                          nr_extra=config['nr_extra'],
                                                          seed=config['seed'] * (1 + vector_index))
         elif config['rail_generator'] == "random_rail_generator":
             self.rail_generator = random_rail_generator()
         elif config['rail_generator'] == "load_env":
             self.predefined_env = True
+            self.rail_generator = random_rail_generator()
 
         else:
             raise (ValueError, f'Unknown rail generator: {config["rail_generator"]}')
@@ -32,12 +36,11 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         set_seed(config['seed'] * (1 + vector_index))
         self.env = RailEnv(width=config["width"], height=config["height"],
                            number_of_agents=config["number_of_agents"],
-                           obs_builder_object=config['obs_builder'], rail_generator=self.rail_generator,
-                           prediction_builder_object=config['predictor'])
+                           obs_builder_object=config['obs_builder'], rail_generator=self.rail_generator)
 
         if self.predefined_env:
-            self.env.load(config['load_env_path'])
-            self.env.load_resource('torch_training.railway', config['load_env_path'])
+            # self.env.load(config['load_env_path'])
+            self.env.load_resource('torch_training.railway', 'complex_scene.pkl')
 
         self.width = self.env.width
         self.height = self.env.height
@@ -50,25 +53,28 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         else:
             obs = self.env.reset()
 
-        predictions = self.env.predict()
-        if predictions != {}:
-            # pred_pos is a 3 dimensions array (N_Agents, T_pred, 2) containing x and y coordinates of
-            # agents at each time step
-            pred_pos = np.concatenate([[x[:, 1:3]] for x in list(predictions.values())], axis=0)
-            pred_dir = [x[:, 2] for x in list(predictions.values())]
+
+        # predictions = self.env.predict()
+        # if predictions != {}:
+        #     # pred_pos is a 3 dimensions array (N_Agents, T_pred, 2) containing x and y coordinates of
+        #     # agents at each time step
+        #     pred_pos = np.concatenate([[x[:, 1:3]] for x in list(predictions.values())], axis=0)
+        #     pred_dir = [x[:, 2] for x in list(predictions.values())]
 
         o = dict()
 
         for i_agent in range(len(self.env.agents)):
+            data, distance, agent_data = self.env.obs_builder.split_tree(tree=np.array(obs[i_agent]),
+                                                                         num_features_per_node=8, current_depth=0)
+            # if predictions != {}:
+            #     pred_obs = self.get_prediction_as_observation(pred_pos, pred_dir, i_agent)
+            #
+            #     agent_id_one_hot = np.zeros(len(self.env.agents))
+            #     agent_id_one_hot[i_agent] = 1
+            #     o[i_agent] = [obs[i_agent], agent_id_one_hot, pred_obs]
+            # else:
 
-            if predictions != {}:
-                pred_obs = self.get_prediction_as_observation(pred_pos, pred_dir, i_agent)
-
-                agent_id_one_hot = np.zeros(len(self.env.agents))
-                agent_id_one_hot[i_agent] = 1
-                o[i_agent] = [obs[i_agent], agent_id_one_hot, pred_obs]
-            else:
-                o[i_agent] = obs[i_agent]
+            o[i_agent] = [data, distance, agent_data]
 
         # needed for the renderer
         self.rail = self.env.rail
@@ -93,23 +99,25 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         r = dict()
         o = dict()
 
-        predictions = self.env.predict()
-        if predictions != {}:
-            # pred_pos is a 3 dimensions array (N_Agents, T_pred, 2) containing x and y coordinates of
-            # agents at each time step
-            pred_pos = np.concatenate([[x[:, 1:3]] for x in list(predictions.values())], axis=0)
-            pred_dir = [x[:, 2] for x in list(predictions.values())]
+        # predictions = self.env.predict()
+        # if predictions != {}:
+        #     # pred_pos is a 3 dimensions array (N_Agents, T_pred, 2) containing x and y coordinates of
+        #     # agents at each time step
+        #     pred_pos = np.concatenate([[x[:, 1:3]] for x in list(predictions.values())], axis=0)
+        #     pred_dir = [x[:, 2] for x in list(predictions.values())]
 
         for i_agent in range(len(self.env.agents)):
             if i_agent not in self.agents_done:
+                data, distance, agent_data = self.env.obs_builder.split_tree(tree=np.array(obs[i_agent]),
+                                                                             num_features_per_node=8, current_depth=0)
 
-                if predictions != {}:
-                    pred_obs = self.get_prediction_as_observation(pred_pos, pred_dir, i_agent)
-                    agent_id_one_hot = np.zeros(len(self.env.agents))
-                    agent_id_one_hot[i_agent] = 1
-                    o[i_agent] = [obs[i_agent], agent_id_one_hot, pred_obs]
-                else:
-                    o[i_agent] = obs[i_agent]
+                # if predictions != {}:
+                #     pred_obs = self.get_prediction_as_observation(pred_pos, pred_dir, i_agent)
+                #     agent_id_one_hot = np.zeros(len(self.env.agents))
+                #     agent_id_one_hot[i_agent] = 1
+                #     o[i_agent] = [obs[i_agent], agent_id_one_hot, pred_obs]
+                # else:
+                o[i_agent] = [data, distance, agent_data]
                 r[i_agent] = rewards[i_agent]
                 d[i_agent] = dones[i_agent]
 

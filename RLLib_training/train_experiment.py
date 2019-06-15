@@ -34,6 +34,7 @@ gin.external_configurable(LocalObsForRailEnv)
 gin.external_configurable(GlobalObsForRailEnvDirectionDependent)
 
 from ray.rllib.models.preprocessors import TupleFlatteningPreprocessor
+import numpy as np
 
 ModelCatalog.register_custom_preprocessor("tree_obs_prep", CustomPreprocessor)
 ModelCatalog.register_custom_preprocessor("global_obs_prep", TupleFlatteningPreprocessor)
@@ -44,10 +45,32 @@ ray.init()  # object_store_memory=150000000000, redis_max_memory=30000000000)
 __file_dirname__ = os.path.dirname(os.path.realpath(__file__))
 
 
+def on_episode_start(info):
+    episode = info['episode']
+    map_width = info['env'].envs[0].width
+    map_height = info['env'].envs[0].height
+    episode.horizon = map_width + map_height
+    
+
+# def on_episode_step(info):
+#     episode = info['episode']
+#     print('#########################', episode._agent_reward_history)
+#     # print(ds)
+
+
+def on_episode_end(info):
+    episode = info['episode']
+    score = 0
+    for k, v in episode._agent_reward_history.items():
+        score += np.sum(v)
+    score /= (len(episode._agent_reward_history) * 3 * episode.horizon)
+    episode.custom_metrics["score"] = score
+
 def train(config, reporter):
     print('Init Env')
 
     set_seed(config['seed'], config['seed'], config['seed'])
+    config['map_height'] = config['map_width']
 
     # Example configuration to generate a random rail
     env_config = {"width": config['map_width'],
@@ -57,19 +80,24 @@ def train(config, reporter):
                   "number_of_agents": config['n_agents'],
                   "seed": config['seed'],
                   "obs_builder": config['obs_builder'],
-                  "predictor": config["predictor"],
+                  "min_dist": config['min_dist'],
+                  # "predictor": config["predictor"],
                   "step_memory": config["step_memory"]}
 
     # Observation space and action space definitions
     if isinstance(config["obs_builder"], TreeObsForRailEnv):
-        if config['predictor'] is None:
-            obs_space = gym.spaces.Tuple(
-                (gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(147,)),) * config['step_memory'])
-        else:
-            obs_space = gym.spaces.Tuple((gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(147,)),
-                                          gym.spaces.Box(low=0, high=1, shape=(config['n_agents'],)),
-                                          gym.spaces.Box(low=0, high=1, shape=(20, config['n_agents'])),) * config[
-                                             'step_memory'])
+        obs_space = gym.spaces.Tuple((gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(168,)), ))
+                                      # gym.spaces.Box(low=0, high=1, shape=(config['n_agents'],)),
+                                      # gym.spaces.Box(low=0, high=1, shape=(20, config['n_agents'])),) * config[
+                                      #    'step_memory'])
+        # if config['predictor'] is None:
+        #     obs_space = gym.spaces.Tuple(
+        #         (gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(147,)),) * config['step_memory'])
+        # else:
+        #     obs_space = gym.spaces.Tuple((gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(147,)),
+        #                                   gym.spaces.Box(low=0, high=1, shape=(config['n_agents'],)),
+        #                                   gym.spaces.Box(low=0, high=1, shape=(20, config['n_agents'])),) * config[
+        #                                      'step_memory'])
         preprocessor = "tree_obs_prep"
 
     elif isinstance(config["obs_builder"], GlobalObsForRailEnv):
@@ -124,12 +152,12 @@ def train(config, reporter):
     trainer_config['multiagent'] = {"policy_graphs": policy_graphs,
                                     "policy_mapping_fn": policy_mapping_fn,
                                     "policies_to_train": list(policy_graphs.keys())}
-    trainer_config["horizon"] = config['horizon']
+    trainer_config["horizon"] = 1.5 * (config['map_width'] + config['map_height'])#config['horizon']
 
     trainer_config["num_workers"] = 0
-    trainer_config["num_cpus_per_worker"] = 4
-    trainer_config["num_gpus"] = 0.2
-    trainer_config["num_gpus_per_worker"] = 0.2
+    trainer_config["num_cpus_per_worker"] = 7
+    trainer_config["num_gpus"] = 0.0
+    trainer_config["num_gpus_per_worker"] = 0.0
     trainer_config["num_cpus_for_driver"] = 1
     trainer_config["num_envs_per_worker"] = 1
     trainer_config['entropy_coeff'] = config['entropy_coeff']
@@ -142,6 +170,10 @@ def train(config, reporter):
     trainer_config['clip_param'] = 0.2
     trainer_config['kl_coeff'] = config['kl_coeff']
     trainer_config['lambda'] = config['lambda_gae']
+    trainer_config['callbacks'] = {
+            "on_episode_start": tune.function(on_episode_start),
+            "on_episode_end": tune.function(on_episode_end)
+        }
 
     def logger_creator(conf):
         """Creates a Unified logger with a default logdir prefix
@@ -172,7 +204,7 @@ def train(config, reporter):
 def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                    map_width, map_height, horizon, policy_folder_name, local_dir, obs_builder,
                    entropy_coeff, seed, conv_model, rail_generator, nr_extra, kl_coeff, lambda_gae,
-                   predictor, step_memory):
+                   step_memory, min_dist):
     tune.run(
         train,
         name=name,
@@ -193,12 +225,13 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "nr_extra": nr_extra,
                 "kl_coeff": kl_coeff,
                 "lambda_gae": lambda_gae,
-                "predictor": predictor,
+                "min_dist": min_dist,
+                # "predictor": predictor,
                 "step_memory": step_memory
                 },
         resources_per_trial={
-            "cpu": 5,
-            "gpu": 0.2
+            "cpu": 8,
+            "gpu": 0
         },
         verbose=2,
         local_dir=local_dir
@@ -207,8 +240,9 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
 
 if __name__ == '__main__':
     gin.external_configurable(tune.grid_search)
-    with path('RLLib_training.experiment_configs.experiment_agent_memory', 'config.gin') as f:
-        gin.parse_config_file(f)
-
-    dir = os.path.join(__file_dirname__, 'experiment_configs', 'experiment_agent_memory')
+    # with path('RLLib_training.experiment_configs.n_agents_experiment', 'config.gin') as f:
+    #     gin.parse_config_file(f)
+    gin.parse_config_file('/home/guillaume/flatland/baselines/RLLib_training/experiment_configs/score_metric_test/config.gin')
+    dir = '/home/guillaume/flatland/baselines/RLLib_training/experiment_configs/score_metric_test'
+    # dir = os.path.join(__file_dirname__, 'experiment_configs', 'experiment_agent_memory')
     run_experiment(local_dir=dir)
