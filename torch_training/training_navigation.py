@@ -41,9 +41,8 @@ env = RailEnv(width=15,
               number_of_agents=1)
 
 
-
 env = RailEnv(width=10,
-              height=20)
+              height=20, obs_builder_object=TreeObsForRailEnv(max_depth=2, predictor=ShortestPathPredictorForRailEnv()))
 env.load("./railway/complex_scene.pkl")
 """
 
@@ -51,7 +50,7 @@ env = RailEnv(width=12,
               height=12,
               rail_generator=complex_rail_generator(nr_start_goal=5, nr_extra=5, min_dist=10, max_dist=99999, seed=0),
               obs_builder_object=TreeObsForRailEnv(max_depth=2, predictor=ShortestPathPredictorForRailEnv()),
-              number_of_agents=3)
+              number_of_agents=5)
 
 env.reset(True, True)
 
@@ -60,7 +59,7 @@ handle = env.get_agent_handles()
 
 state_size = 168 * 2
 action_size = 5
-n_trials = 20000
+n_trials = 15000
 max_steps = int(3 * (env.height + env.width))
 eps = 1.
 eps_end = 0.005
@@ -76,9 +75,9 @@ action_prob = [0] * action_size
 agent_obs = [None] * env.get_num_agents()
 agent_next_obs = [None] * env.get_num_agents()
 agent = Agent(state_size, action_size, "FC", 0)
-agent.qnetwork_local.load_state_dict(torch.load('./Nets/avoid_checkpoint20000.pth'))
+agent.qnetwork_local.load_state_dict(torch.load('./Nets/avoid_checkpoint15000.pth'))
 
-demo = False
+demo = True
 
 def max_lt(seq, val):
     """
