@@ -1,7 +1,7 @@
 run_experiment.name = "memory_experiment_results"
 run_experiment.num_iterations = 2002
 run_experiment.save_every = 50
-run_experiment.hidden_sizes = {"grid_search": [[32, 32], [64, 64], [128, 128]]}
+run_experiment.hidden_sizes = [32, 32]#{"grid_search": [[32, 32], [64, 64], [128, 128]]}
 
 run_experiment.map_width = 8
 run_experiment.map_height = 8
@@ -20,7 +20,7 @@ run_experiment.obs_builder = @TreeObsForRailEnv()
 TreeObsForRailEnv.max_depth = 2
 LocalObsForRailEnv.view_radius = 5
 
-run_experiment.entropy_coeff = {"grid_search": [1e-4, 1e-3, 1e-2]}
+run_experiment.entropy_coeff = 1e-4#{"grid_search": [1e-4, 1e-3, 1e-2]}
 run_experiment.kl_coeff = 0.2
 run_experiment.lambda_gae = 0.9
 run_experiment.predictor = None#@DummyPredictorForRailEnv()

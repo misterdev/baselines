@@ -2,7 +2,7 @@ import os
 
 import gin
 import gym
-from flatland.envs.predictions import DummyPredictorForRailEnv
+from flatland.envs.predictions import DummyPredictorForRailEnv, ShortestPathPredictorForRailEnv
 from importlib_resources import path
 # Import PPO trainer: we can replace these imports by any other trainer from RLLib.
 from ray.rllib.agents.ppo.ppo import DEFAULT_CONFIG
@@ -11,6 +11,7 @@ from ray.rllib.agents.ppo.ppo_policy_graph import PPOPolicyGraph as PolicyGraph
 from ray.rllib.models import ModelCatalog
 
 gin.external_configurable(DummyPredictorForRailEnv)
+gin.external_configurable(ShortestPathPredictorForRailEnv)
 
 import ray
 
@@ -66,6 +67,7 @@ def on_episode_end(info):
     score /= (len(episode._agent_reward_history) * 3 * episode.horizon)
     episode.custom_metrics["score"] = score
 
+
 def train(config, reporter):
     print('Init Env')
 
@@ -81,23 +83,12 @@ def train(config, reporter):
                   "seed": config['seed'],
                   "obs_builder": config['obs_builder'],
                   "min_dist": config['min_dist'],
-                  # "predictor": config["predictor"],
+                  "predictor": config["predictor"],
                   "step_memory": config["step_memory"]}
 
     # Observation space and action space definitions
     if isinstance(config["obs_builder"], TreeObsForRailEnv):
         obs_space = gym.spaces.Tuple((gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(168,)), ))
-                                      # gym.spaces.Box(low=0, high=1, shape=(config['n_agents'],)),
-                                      # gym.spaces.Box(low=0, high=1, shape=(20, config['n_agents'])),) * config[
-                                      #    'step_memory'])
-        # if config['predictor'] is None:
-        #     obs_space = gym.spaces.Tuple(
-        #         (gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(147,)),) * config['step_memory'])
-        # else:
-        #     obs_space = gym.spaces.Tuple((gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(147,)),
-        #                                   gym.spaces.Box(low=0, high=1, shape=(config['n_agents'],)),
-        #                                   gym.spaces.Box(low=0, high=1, shape=(20, config['n_agents'])),) * config[
-        #                                      'step_memory'])
         preprocessor = "tree_obs_prep"
 
     elif isinstance(config["obs_builder"], GlobalObsForRailEnv):
@@ -152,7 +143,7 @@ def train(config, reporter):
     trainer_config['multiagent'] = {"policy_graphs": policy_graphs,
                                     "policy_mapping_fn": policy_mapping_fn,
                                     "policies_to_train": list(policy_graphs.keys())}
-    trainer_config["horizon"] = 1.5 * (config['map_width'] + config['map_height'])#config['horizon']
+    trainer_config["horizon"] = 3 * (config['map_width'] + config['map_height'])#config['horizon']
 
     trainer_config["num_workers"] = 0
     trainer_config["num_cpus_per_worker"] = 7
