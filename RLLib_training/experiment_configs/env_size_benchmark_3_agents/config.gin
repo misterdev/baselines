@@ -18,12 +18,13 @@ run_experiment.conv_model = False
 
 #run_experiment.obs_builder = {"grid_search": [@GlobalObsForRailEnv(), @GlobalObsForRailEnvDirectionDependent]}# [@TreeObsForRailEnv(), @GlobalObsForRailEnv() ]}
 run_experiment.obs_builder = @TreeObsForRailEnv()
-TreeObsForRailEnv.predictor = @ShortestPathPredictorForRailEnv
+TreeObsForRailEnv.predictor = @ShortestPathPredictorForRailEnv()
 TreeObsForRailEnv.max_depth = 2
 LocalObsForRailEnv.view_radius = 5
 
 run_experiment.entropy_coeff = 0.001
 run_experiment.kl_coeff = 0.2 #{"grid_search": [0, 0.2]}
 run_experiment.lambda_gae = 0.9 # {"grid_search": [0.9, 1.0]}
-#run_experiment.predictor = "ShortestPathPredictorForRailEnv"
+#run_experiment.predictor = "ShortestPathPredictorForRailEnv()"
 run_experiment.step_memory = 2
+run_experiment.min_dist = 10
