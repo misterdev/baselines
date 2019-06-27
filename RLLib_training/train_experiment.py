@@ -80,12 +80,11 @@ def train(config, reporter):
                   "seed": config['seed'],
                   "obs_builder": config['obs_builder'],
                   "min_dist": config['min_dist'],
-                  "predictor": config["predictor"],
                   "step_memory": config["step_memory"]}
 
     # Observation space and action space definitions
     if isinstance(config["obs_builder"], TreeObsForRailEnv):
-        obs_space = gym.spaces.Tuple((gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(168,)), ))
+        obs_space = gym.spaces.Tuple((gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(168,)),) * 2)
         preprocessor = "tree_obs_prep"
 
     elif isinstance(config["obs_builder"], GlobalObsForRailEnv):
@@ -190,7 +189,7 @@ def train(config, reporter):
 
 @gin.configurable
 def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
-                   map_width, map_height, horizon, policy_folder_name, local_dir, obs_builder,
+                   map_width, map_height, policy_folder_name, local_dir, obs_builder,
                    entropy_coeff, seed, conv_model, rail_generator, nr_extra, kl_coeff, lambda_gae,
                    step_memory, min_dist):
     tune.run(
@@ -203,7 +202,6 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "map_width": map_width,
                 "map_height": map_height,
                 "local_dir": local_dir,
-                "horizon": horizon,  # Max number of time steps
                 'policy_folder_name': policy_folder_name,
                 "obs_builder": obs_builder,
                 "entropy_coeff": entropy_coeff,
@@ -230,7 +228,7 @@ if __name__ == '__main__':
     gin.external_configurable(tune.grid_search)
     # with path('RLLib_training.experiment_configs.n_agents_experiment', 'config.gin') as f:
     #     gin.parse_config_file(f)
-    gin.parse_config_file('/home/guillaume/flatland/baselines/RLLib_training/experiment_configs/score_metric_test/config.gin')
-    dir = '/home/guillaume/flatland/baselines/RLLib_training/experiment_configs/score_metric_test'
+    gin.parse_config_file('/mount/SDC/flatland/baselines/RLLib_training/experiment_configs/env_size_benchmark_3_agents/config.gin')
+    dir = '/mount/SDC/flatland/baselines/RLLib_training/experiment_configs/env_size_benchmark_3_agents'
     # dir = os.path.join(__file_dirname__, 'experiment_configs', 'experiment_agent_memory')
     run_experiment(local_dir=dir)
