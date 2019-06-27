@@ -50,13 +50,7 @@ def on_episode_start(info):
     episode = info['episode']
     map_width = info['env'].envs[0].width
     map_height = info['env'].envs[0].height
-    episode.horizon = map_width + map_height
-    
-
-# def on_episode_step(info):
-#     episode = info['episode']
-#     print('#########################', episode._agent_reward_history)
-#     # print(ds)
+    episode.horizon = 3*(map_width + map_height)
 
 
 def on_episode_end(info):
@@ -64,17 +58,20 @@ def on_episode_end(info):
     score = 0
     for k, v in episode._agent_reward_history.items():
         score += np.sum(v)
-    score /= (len(episode._agent_reward_history) * 3 * episode.horizon)
+    score /= (len(episode._agent_reward_history) * episode.horizon)
+    done = 1
+    if len(episode._agent_reward_history) == episode.horizon:
+        done = 0
     episode.custom_metrics["score"] = score
+    episode.custom_metrics["proportion_episode_solved"] = done
 
 
 def train(config, reporter):
     print('Init Env')
 
     set_seed(config['seed'], config['seed'], config['seed'])
-    config['map_height'] = config['map_width']
 
-    # Example configuration to generate a random rail
+    # Environment parameters
     env_config = {"width": config['map_width'],
                   "height": config['map_height'],
                   "rail_generator": config["rail_generator"],
