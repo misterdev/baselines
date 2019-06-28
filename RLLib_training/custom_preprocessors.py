@@ -48,11 +48,9 @@ def norm_obs_clip(obs, clip_min=-1, clip_max=1):
     return np.clip((np.array(obs) - min_obs) / norm, clip_min, clip_max)
 
 
-class CustomPreprocessor(Preprocessor):
+class TreeObsPreprocessor(Preprocessor):
     def _init_shape(self, obs_space, options):
         return sum([space.shape[0] for space in obs_space]),
-        # return (sum([space.shape[0] for space in obs_space]), )
-        # return ((sum([space.shape[0] for space in obs_space[:2]]) + obs_space[2].shape[0] * obs_space[2].shape[1]),)
 
     def transform(self, observation):
         data = norm_obs_clip(observation[0][0])
@@ -63,33 +61,4 @@ class CustomPreprocessor(Preprocessor):
         agent_data2 = np.clip(observation[1][2], -1, 1)
 
         return np.concatenate((np.concatenate((np.concatenate((data, distance)), agent_data)), np.concatenate((np.concatenate((data2, distance2)), agent_data2))))
-        return norm_obs_clip(observation)
-        return np.concatenate([norm_obs_clip(observation[0]), norm_obs_clip(observation[1])])
-        # if len(observation) == 111:
-        # return np.concatenate([norm_obs_clip(obs) for obs in observation])
-        # print('OBSERVATION:', observation, len(observation[0]))
-        return np.concatenate([norm_obs_clip(observation[0]), observation[1], observation[
-            2].flatten()])  #, norm_obs_clip(observation[1]), observation[2], observation[3].flatten()])
-        #one_hot = observation[-3:]
-        #return np.append(obs, one_hot)
-        # else:
-        #     return observation
-
-
-class ConvModelPreprocessor(Preprocessor):
-    def _init_shape(self, obs_space, options):
-        out_shape = (obs_space[0].shape[0], obs_space[0].shape[1], sum([space.shape[2] for space in obs_space]))
-        return out_shape
-
-    def transform(self, observation):
-        return np.concatenate([observation[0],
-                               observation[1],
-                               observation[2]], axis=2)
-
-
-
-# class NoPreprocessor:
-#     def _init_shape(self, obs_space, options):
-#         num_features = 0
-#         for space in obs_space:
 

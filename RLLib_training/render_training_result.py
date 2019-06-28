@@ -1,57 +1,39 @@
-from baselines.RLLib_training.RailEnvRLLibWrapper import RailEnvRLLibWrapper
+from RailEnvRLLibWrapper import RailEnvRLLibWrapper
+from custom_preprocessors import TreeObsPreprocessor
 import gym
+import os
 
-
-from flatland.envs.generators import complex_rail_generator
-
-
-# Import PPO trainer: we can replace these imports by any other trainer from RLLib.
 from ray.rllib.agents.ppo.ppo import DEFAULT_CONFIG
 from ray.rllib.agents.ppo.ppo import PPOTrainer as Trainer
-# from baselines.CustomPPOTrainer import PPOTrainer as Trainer
 from ray.rllib.agents.ppo.ppo_policy_graph import PPOPolicyGraph as PolicyGraph
-# from baselines.CustomPPOPolicyGraph import CustomPPOPolicyGraph as PolicyGraph
 
 from ray.rllib.models import ModelCatalog
-from ray.tune.logger import pretty_print
-from baselines.RLLib_training.custom_preprocessors import CustomPreprocessor, ConvModelPreprocessor
-
-from baselines.RLLib_training.custom_models import ConvModelGlobalObs
-
 
 import ray
 import numpy as np
 
-from ray.tune.logger import UnifiedLogger
-import tempfile
-
 import gin
 
-from ray import tune
+from flatland.envs.predictions import DummyPredictorForRailEnv, ShortestPathPredictorForRailEnv
+gin.external_configurable(DummyPredictorForRailEnv)
+gin.external_configurable(ShortestPathPredictorForRailEnv)
 
 from ray.rllib.utils.seed import seed as set_seed
-from flatland.envs.observations import TreeObsForRailEnv, GlobalObsForRailEnv,\
-                                       LocalObsForRailEnv, GlobalObsForRailEnvDirectionDependent
+from flatland.envs.observations import TreeObsForRailEnv
 
 from flatland.utils.rendertools import RenderTool
 import time
 
 gin.external_configurable(TreeObsForRailEnv)
-gin.external_configurable(GlobalObsForRailEnv)
-gin.external_configurable(LocalObsForRailEnv)
-gin.external_configurable(GlobalObsForRailEnvDirectionDependent)
 
-from ray.rllib.models.preprocessors import TupleFlatteningPreprocessor
+ModelCatalog.register_custom_preprocessor("tree_obs_prep", TreeObsPreprocessor)
+ray.init()  # object_store_memory=150000000000, redis_max_memory=30000000000)
 
-ModelCatalog.register_custom_preprocessor("tree_obs_prep", CustomPreprocessor)
-ModelCatalog.register_custom_preprocessor("global_obs_prep", TupleFlatteningPreprocessor)
-ModelCatalog.register_custom_preprocessor("conv_obs_prep", ConvModelPreprocessor)
-ModelCatalog.register_custom_model("conv_model", ConvModelGlobalObs)
-ray.init()#object_store_memory=150000000000, redis_max_memory=30000000000)
+__file_dirname__ = os.path.dirname(os.path.realpath(__file__))
 
-
-CHECKPOINT_PATH = '/home/guillaume/Desktop/distMAgent/experiment_agent_memory/' \
-                  'ppo_policy_hidden_size_32_entropy_coeff_0.0001_mu413rlu/checkpoint_201/checkpoint-201'
+CHECKPOINT_PATH = os.path.join(__file_dirname__, 'experiment_configs', 'config_example', 'ppo_policy_two_obs_with_predictions_n_agents_4_map_size_20q58l5_f7',
+                               'checkpoint_101', 'checkpoint-101')
+CHECKPOINT_PATH = '/home/guillaume/Desktop/distMAgent/ppo_policy_two_obs_with_predictions_n_agents_7_8e5zko1_/checkpoint_1301/checkpoint-1301'
 
 N_EPISODES = 10
 N_STEPS_PER_EPISODE = 50
@@ -65,54 +47,18 @@ def render_training_result(config):
     # Example configuration to generate a random rail
     env_config = {"width": config['map_width'],
                   "height": config['map_height'],
-                  "rail_generator": "load_env",#config["rail_generator"],
+                  "rail_generator": config["rail_generator"],
                   "nr_extra": config["nr_extra"],
                   "number_of_agents": config['n_agents'],
                   "seed": config['seed'],
                   "obs_builder": config['obs_builder'],
-                  "predictor": config["predictor"],
+                  "min_dist": config['min_dist'],
                   "step_memory": config["step_memory"]}
 
     # Observation space and action space definitions
     if isinstance(config["obs_builder"], TreeObsForRailEnv):
-        if config['predictor'] is None:
-            obs_space = gym.spaces.Tuple(
-                (gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(147,)),) * config['step_memory'])
-        else:
-            obs_space = gym.spaces.Tuple((gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(147,)),
-                                          gym.spaces.Box(low=0, high=1, shape=(config['n_agents'],)),
-                                          gym.spaces.Box(low=0, high=1, shape=(20, config['n_agents'])),) * config[
-                                             'step_memory'])
-        preprocessor = "tree_obs_prep"
-
-    elif isinstance(config["obs_builder"], GlobalObsForRailEnv):
-        obs_space = gym.spaces.Tuple((
-            gym.spaces.Box(low=0, high=1, shape=(config['map_height'], config['map_width'], 16)),
-            gym.spaces.Box(low=0, high=1, shape=(config['map_height'], config['map_width'], 8)),
-            gym.spaces.Box(low=0, high=1, shape=(config['map_height'], config['map_width'], 2))))
-        if config['conv_model']:
-            preprocessor = "conv_obs_prep"
-        else:
-            preprocessor = "global_obs_prep"
-
-    elif isinstance(config["obs_builder"], GlobalObsForRailEnvDirectionDependent):
-        obs_space = gym.spaces.Tuple((
-            gym.spaces.Box(low=0, high=1, shape=(config['map_height'], config['map_width'], 16)),
-            gym.spaces.Box(low=0, high=1, shape=(config['map_height'], config['map_width'], 5)),
-            gym.spaces.Box(low=0, high=1, shape=(config['map_height'], config['map_width'], 2))))
-        if config['conv_model']:
-            preprocessor = "conv_obs_prep"
-        else:
-            preprocessor = "global_obs_prep"
-
-    elif isinstance(config["obs_builder"], LocalObsForRailEnv):
-        view_radius = config["obs_builder"].view_radius
-        obs_space = gym.spaces.Tuple((
-            gym.spaces.Box(low=0, high=1, shape=(2 * view_radius + 1, 2 * view_radius + 1, 16)),
-            gym.spaces.Box(low=0, high=1, shape=(2 * view_radius + 1, 2 * view_radius + 1, 2)),
-            gym.spaces.Box(low=0, high=1, shape=(2 * view_radius + 1, 2 * view_radius + 1, 4)),
-            gym.spaces.Box(low=0, high=1, shape=(4,))))
-        preprocessor = "global_obs_prep"
+        obs_space = gym.spaces.Tuple((gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(168,)),) * 2)
+        preprocessor = TreeObsPreprocessor
 
     else:
         raise ValueError("Undefined observation space")
@@ -122,23 +68,20 @@ def render_training_result(config):
     # Dict with the different policies to train
     policy_graphs = {
         config['policy_folder_name'].format(**locals()): (PolicyGraph, obs_space, act_space, {})
+        # "ppo_policy": (PolicyGraph, obs_space, act_space, {})
     }
 
     def policy_mapping_fn(agent_id):
-        return config['policy_folder_name'].format(**locals())
+        return "ppo_policy"
 
     # Trainer configuration
     trainer_config = DEFAULT_CONFIG.copy()
-    if config['conv_model']:
-        trainer_config['model'] = {"custom_model": "conv_model", "custom_preprocessor": preprocessor}
-    else:
-        trainer_config['model'] = {"fcnet_hiddens": config['hidden_sizes'], "custom_preprocessor": preprocessor}
+
+    trainer_config['model'] = {"fcnet_hiddens": config['hidden_sizes']}
 
     trainer_config['multiagent'] = {"policy_graphs": policy_graphs,
                                     "policy_mapping_fn": policy_mapping_fn,
                                     "policies_to_train": list(policy_graphs.keys())}
-    trainer_config["horizon"] = config['horizon']
-
 
     trainer_config["num_workers"] = 0
     trainer_config["num_cpus_per_worker"] = 4
@@ -161,15 +104,15 @@ def render_training_result(config):
 
     trainer = Trainer(env=RailEnvRLLibWrapper, config=trainer_config)
 
-    print('hidden sizes:', config['hidden_sizes'])
     trainer.restore(CHECKPOINT_PATH)
 
+    # policy = trainer.get_policy("ppo_policy")
     policy = trainer.get_policy(config['policy_folder_name'].format(**locals()))
 
-
-    preprocessor = CustomPreprocessor(obs_space)
+    preprocessor = preprocessor(obs_space)
     env_renderer = RenderTool(env, gl="PIL")
     for episode in range(N_EPISODES):
+
         observation = env.reset()
         for i in range(N_STEPS_PER_EPISODE):
             preprocessed_obs = []
@@ -178,13 +121,18 @@ def render_training_result(config):
             action, _, infos = policy.compute_actions(preprocessed_obs, [])
             logits = infos['behaviour_logits']
             actions = dict()
+
+            # We select the greedy action.
             for j, logit in enumerate(logits):
                 actions[j] = np.argmax(logit)
+
+            # In case we prefer to sample an action stochastically according to the policy graph.
             # for j, act in enumerate(action):
                 # actions[j] = act
+
+            # Time to see the rendering at one step
             time.sleep(1)
-            print(actions, logits)
-            # print(action, print(infos['behaviour_logits']))
+
             env_renderer.renderEnv(show=True, frames=True, iEpisode=episode, iStep=i,
                                    action_dict=list(actions.values()))
 
@@ -195,9 +143,9 @@ def render_training_result(config):
 
 @gin.configurable
 def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
-                   map_width, map_height, horizon, policy_folder_name, local_dir, obs_builder,
-                   entropy_coeff, seed, conv_model, rail_generator, nr_extra, kl_coeff,
-                   lambda_gae, predictor, step_memory):
+                   map_width, map_height, policy_folder_name, obs_builder,
+                   entropy_coeff, seed, conv_model, rail_generator, nr_extra, kl_coeff, lambda_gae,
+                   step_memory, min_dist):
 
     render_training_result(
         config={"n_agents": n_agents,
@@ -205,8 +153,6 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "save_every": save_every,
                 "map_width": map_width,
                 "map_height": map_height,
-                "local_dir": local_dir,
-                "horizon": horizon,  # Max number of time steps
                 'policy_folder_name': policy_folder_name,
                 "obs_builder": obs_builder,
                 "entropy_coeff": entropy_coeff,
@@ -216,14 +162,12 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "nr_extra": nr_extra,
                 "kl_coeff": kl_coeff,
                 "lambda_gae": lambda_gae,
-                "predictor": predictor,
+                "min_dist": min_dist,
                 "step_memory": step_memory
                 }
     )
 
 
 if __name__ == '__main__':
-    gin.external_configurable(tune.grid_search)
-    dir = '/home/guillaume/EPFL/Master_Thesis/flatland/baselines/RLLib_training/experiment_configs/experiment_agent_memory'  # To Modify
-    gin.parse_config_file(dir + '/config.gin')
-    run_experiment(local_dir=dir)
+    gin.parse_config_file(os.path.join(__file_dirname__, 'experiment_configs', 'config_example', 'config.gin'))
+    run_experiment()
