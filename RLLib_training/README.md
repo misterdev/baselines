@@ -55,3 +55,25 @@ Note that `@TreeObsForRailEnv` references the class, while `@TreeObsForRailEnv()
 
 
 More documentation on how to use gin-config can be found on the github repository: https://github.com/google/gin-config
+
+## Run an example:
+To start a training on a 20X20 map, with different numbers of agents initialized at each episode, on can run the train_experiment.py script:
+```
+python baselines/RLLib_training/train_experiment.py
+```
+This will load the gin config file in the folder `experiment_configs/config_examples`.
+
+To visualize the result of a training, one can load a training checkpoint and use the policy learned.
+This is one in the `render_training_result.py` script. One has to modify the `CHECKPOINT_PATH` at the beginning of this script:
+
+```
+CHECKPOINT_PATH = os.path.join(__file_dirname__, 'experiment_configs', 'config_example', 'ppo_policy_two_obs_with_predictions_n_agents_4_map_size_20q58l5_f7',
+                               'checkpoint_101', 'checkpoint-101')
+```
+and load the corresponding gin config file:
+
+```
+gin.parse_config_file(os.path.join(__file_dirname__, 'experiment_configs', 'config_example', 'config.gin'))
+```
+
+
