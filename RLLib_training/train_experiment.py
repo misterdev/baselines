@@ -47,12 +47,17 @@ def on_episode_start(info):
 
 def on_episode_end(info):
     episode = info['episode']
+
+    # Calculation of a custom score metric: cum of all accumulated rewards, divided by the number of agents
+    # and the number of the maximum time steps of the episode.
     score = 0
     for k, v in episode._agent_reward_history.items():
         score += np.sum(v)
     score /= (len(episode._agent_reward_history) * episode.horizon)
+
+    # Calculation of the proportion of solved episodes before the maximum time step
     done = 1
-    if len(episode._agent_reward_history) == episode.horizon:
+    if len(episode._agent_reward_history[0]) == episode.horizon:
         done = 0
     episode.custom_metrics["score"] = score
     episode.custom_metrics["proportion_episode_solved"] = done
