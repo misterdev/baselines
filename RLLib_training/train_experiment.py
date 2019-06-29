@@ -179,7 +179,7 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "kl_coeff": kl_coeff,
                 "lambda_gae": lambda_gae,
                 "min_dist": min_dist,
-                "step_memory": step_memory
+                    "step_memory": step_memory
                 },
         resources_per_trial={
             "cpu": 3,
@@ -191,7 +191,7 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
 
 
 if __name__ == '__main__':
-    print(str(os.path.join(__file_dirname__, 'experiment_configs', 'config_example', 'config.gin')))
-    gin.parse_config_file(os.path.join(__file_dirname__, 'experiment_configs', 'config_example', 'config.gin'))
-    dir = os.path.join(__file_dirname__, 'experiment_configs', 'config_example')
+    folder_name = 'config_example'  # To Modify
+    gin.parse_config_file(os.path.join(__file_dirname__, 'experiment_configs', folder_name, 'config.gin'))
+    dir = os.path.join(__file_dirname__, 'experiment_configs', folder_name)
     run_experiment(local_dir=dir)

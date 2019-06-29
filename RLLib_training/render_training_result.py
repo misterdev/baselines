@@ -32,7 +32,7 @@ ray.init()  # object_store_memory=150000000000, redis_max_memory=30000000000)
 __file_dirname__ = os.path.dirname(os.path.realpath(__file__))
 
 CHECKPOINT_PATH = os.path.join(__file_dirname__, 'experiment_configs', 'config_example', 'ppo_policy_two_obs_with_predictions_n_agents_4_map_size_20q58l5_f7',
-                               'checkpoint_101', 'checkpoint-101')
+                               'checkpoint_101', 'checkpoint-101')  # To Modify
 N_EPISODES = 10
 N_STEPS_PER_EPISODE = 50
 
@@ -165,5 +165,5 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
 
 
 if __name__ == '__main__':
-    gin.parse_config_file(os.path.join(__file_dirname__, 'experiment_configs', 'config_example', 'config.gin'))
+    gin.parse_config_file(os.path.join(__file_dirname__, 'experiment_configs', 'config_example', 'config.gin'))  # To Modify
     run_experiment()
