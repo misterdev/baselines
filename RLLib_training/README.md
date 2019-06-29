@@ -1,7 +1,5 @@
 This repository allows to run Rail Environment multi agent training with the RLLib Library.
 
-It should be cloned inside the main flatland repository.
-
 ## Installation:
 ```sh
 pip install ray
