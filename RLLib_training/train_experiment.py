@@ -99,7 +99,8 @@ def train(config, reporter):
 
     # Trainer configuration
     trainer_config = DEFAULT_CONFIG.copy()
-    trainer_config['model'] = {"fcnet_hiddens": config['hidden_sizes'], "custom_preprocessor": preprocessor}
+    trainer_config['model'] = {"fcnet_hiddens": config['hidden_sizes'], "custom_preprocessor": preprocessor,
+                               "custom_options": {"step_memory": config["step_memory"]}}
 
     trainer_config['multiagent'] = {"policy_graphs": policy_graphs,
                                     "policy_mapping_fn": policy_mapping_fn,
@@ -130,6 +131,7 @@ def train(config, reporter):
             "on_episode_start": tune.function(on_episode_start),
             "on_episode_end": tune.function(on_episode_end)
         }
+
 
     def logger_creator(conf):
         """Creates a Unified logger with a default logdir prefix."""
@@ -179,7 +181,8 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "kl_coeff": kl_coeff,
                 "lambda_gae": lambda_gae,
                 "min_dist": min_dist,
-                    "step_memory": step_memory
+                "step_memory": step_memory  # If equal to two, the current observation plus
+                                            # the observation of last time step will be given as input the the model.
                 },
         resources_per_trial={
             "cpu": 3,

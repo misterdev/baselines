@@ -105,8 +105,8 @@ def render_training_result(config):
 
     policy = trainer.get_policy("ppo_policy")
 
-    preprocessor = preprocessor(obs_space)
-    env_renderer = RenderTool(env, gl="PIL")
+    preprocessor = preprocessor(obs_space, {"step_memory": config["step_memory"]})
+    env_renderer = RenderTool(env, gl="PILSVG")
     for episode in range(N_EPISODES):
 
         observation = env.reset()
