@@ -1,27 +1,25 @@
 This repository allows to run Rail Environment multi agent training with the RLLib Library.
 
-It should be clone inside the main flatland repository.
-
 ## Installation:
 ```sh
 pip install ray
 pip install gin-config
 ```
 
-To start a grid search on some parameters, you can create a folder containing a config.gin file (see example in `grid_search_configs/n_agents_grid_search/config.gin`.
+To start a training with different parameters, you can create a folder containing a config.gin file (see example in `experiment_configs/config_example/config.gin`.
 
-Then, you can modify the config.gin file path at the end of the `grid_search_train.py` file.
+Then, you can modify the config.gin file path at the end of the `train_experiment.py` file.
 
 The results will be stored inside the folder, and the learning curves can be visualized in 
 tensorboard:
 
 ```
-tensorboard --logdir=/path/to/foler_containing_config_gin_file
+tensorboard --logdir=/path/to/folder_containing_config_gin_file
 ```
 
 ## Gin config files
 
-In each config.gin files, all the parameters, except `local_dir` of the `run_experiment` functions have to be specified.
+In each config.gin files, all the parameters of the `run_experiment` functions have to be specified.
 For example, to indicate the number of agents that have to be initialized at the beginning of each simulation, the following line should be added:
 
 ```
@@ -54,4 +52,26 @@ Note that `@TreeObsForRailEnv` references the class, while `@TreeObsForRailEnv()
 
 
 
-More documentation on how to use gin-config can be found on the library github repository: https://github.com/google/gin-config
+More documentation on how to use gin-config can be found on the github repository: https://github.com/google/gin-config
+
+## Run an example:
+To start a training on a 20X20 map, with different numbers of agents initialized at each episode, on can run the train_experiment.py script:
+```
+python baselines/RLLib_training/train_experiment.py
+```
+This will load the gin config file in the folder `experiment_configs/config_examples`.
+
+To visualize the result of a training, one can load a training checkpoint and use the policy learned.
+This is done in the `render_training_result.py` script. One has to modify the `CHECKPOINT_PATH` at the beginning of this script:
+
+```
+CHECKPOINT_PATH = os.path.join(__file_dirname__, 'experiment_configs', 'config_example', 'ppo_policy_two_obs_with_predictions_n_agents_4_map_size_20q58l5_f7',
+                               'checkpoint_101', 'checkpoint-101')
+```
+and load the corresponding gin config file:
+
+```
+gin.parse_config_file(os.path.join(__file_dirname__, 'experiment_configs', 'config_example', 'config.gin'))
+```
+
+
