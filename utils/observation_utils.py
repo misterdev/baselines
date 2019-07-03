@@ -48,7 +48,7 @@ def norm_obs_clip(obs, clip_min=-1, clip_max=1):
     return np.clip((np.array(obs) - min_obs) / norm, clip_min, clip_max)
 
 
-def split_tree(tree, num_features_per_node=8, current_depth=0):
+def split_tree(tree, num_features_per_node=9, current_depth=0):
     """
     Splits the tree observation into different sub groups that need the same normalization.
     This is necessary because the tree observation includes two different distance:
@@ -80,10 +80,9 @@ def split_tree(tree, num_features_per_node=8, current_depth=0):
     Here we split the node features into the different classes of distances and binary values.
     Pay close attention to this part if you modify any of the features in the tree observation.
     """
-    tree_data = tree[:4].tolist()
-    distance_data = [tree[4]]
-    agent_data = tree[5:num_features_per_node].tolist()
-
+    tree_data = tree[:6].tolist()
+    distance_data = [tree[6]]
+    agent_data = tree[7:num_features_per_node].tolist()
     # Split each child of the current node and continue to next depth level
     for children in range(4):
         child_tree = tree[(num_features_per_node + children * child_size):
