@@ -28,13 +28,15 @@ agent.qnetwork_local.load_state_dict(torch.load('./torch_training/Nets/avoid_che
 agent = RandomAgent(state_size, action_size)
 start_time_scoring = time.time()
 test_idx = 0
+score_board = []
 for test_nr in parameters:
     current_parameters = parameters[test_nr]
     test_score, test_dones, test_time = run_test(current_parameters, agent, test_nr=test_idx)
     print('---------')
     print(' RESULTS')
     print('---------')
-    print('{} score was = {:.3f} with {:.2f}% environments solved. Test took {} Seconds to complete.\n\n\n'.format(
+    print('{} score was {:.3f} with {:.2f}% environments solved. Test took {} Seconds to complete.\n\n\n'.format(
         test_nr,
         np.mean(test_score), np.mean(test_dones) * 100, test_time))
     test_idx += 1
+    score_board.append([test_score, test_dones, test_times])
