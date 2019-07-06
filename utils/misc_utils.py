@@ -1,5 +1,16 @@
-# Print iterations progress
+import random
+import time
+from collections import deque
+
 import numpy as np
+from flatland.envs.generators import complex_rail_generator
+from flatland.envs.observations import TreeObsForRailEnv
+from flatland.envs.predictions import ShortestPathPredictorForRailEnv
+from flatland.envs.rail_env import RailEnv
+
+from utils.observation_utils import norm_obs_clip, split_tree
+
+
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '*'):
     """
     Call in a loop to create terminal progress bar
@@ -49,3 +60,84 @@ class RandomAgent:
     def load(self, filename):
         # Load a policy
         return
+
+
+def run_test(parameters, agent, test_nr=0, tree_depth=3):
+    # Parameter initialization
+    features_per_node = 9
+    start_time_scoring = time.time()
+    action_dict = dict()
+    nr_trials_per_test = 100
+    print('Running Test {} with (x_dim,y_dim) = ({},{}) and {} Agents.'.format(test_nr, parameters[0], parameters[1],
+                                                                               parameters[2]))
+
+    # Reset all measurements
+    time_obs = deque(maxlen=2)
+    test_scores = []
+    test_dones = []
+
+    # Reset environment
+    random.seed(parameters[3])
+    np.random.seed(parameters[3])
+    nr_paths = max(2, parameters[2] + int(0.5 * parameters[2]))
+    min_dist = int(min([parameters[0], parameters[1]]) * 0.75)
+    env = RailEnv(width=parameters[0],
+                  height=parameters[1],
+                  rail_generator=complex_rail_generator(nr_start_goal=nr_paths, nr_extra=5, min_dist=min_dist,
+                                                        max_dist=99999,
+                                                        seed=parameters[3]),
+                  obs_builder_object=TreeObsForRailEnv(max_depth=tree_depth,
+                                                       predictor=ShortestPathPredictorForRailEnv()),
+                  number_of_agents=parameters[2])
+    max_steps = int(3 * (env.height + env.width))
+    agent_obs = [None] * env.get_num_agents()
+    printProgressBar(0, nr_trials_per_test, prefix='Progress:', suffix='Complete', length=20)
+    for trial in range(nr_trials_per_test):
+        # Reset the env
+        obs = env.reset(True, True)
+        for a in range(env.get_num_agents()):
+            data, distance, agent_data = split_tree(tree=np.array(obs[a]), num_features_per_node=9,
+                                                    current_depth=0)
+            data = norm_obs_clip(data)
+            distance = norm_obs_clip(distance)
+            agent_data = np.clip(agent_data, -1, 1)
+            obs[a] = np.concatenate((np.concatenate((data, distance)), agent_data))
+
+        for i in range(2):
+            time_obs.append(obs)
+
+        for a in range(env.get_num_agents()):
+            agent_obs[a] = np.concatenate((time_obs[0][a], time_obs[1][a]))
+
+        # Run episode
+        trial_score = 0
+        for step in range(max_steps):
+
+            for a in range(env.get_num_agents()):
+                action = agent.act(agent_obs[a], eps=0)
+                action_dict.update({a: action})
+
+            # Environment step
+            next_obs, all_rewards, done, _ = env.step(action_dict)
+
+            for a in range(env.get_num_agents()):
+                data, distance, agent_data = split_tree(tree=np.array(next_obs[a]),
+                                                        num_features_per_node=features_per_node,
+                                                        current_depth=0)
+                data = norm_obs_clip(data)
+                distance = norm_obs_clip(distance)
+                agent_data = np.clip(agent_data, -1, 1)
+                next_obs[a] = np.concatenate((np.concatenate((data, distance)), agent_data))
+            time_obs.append(next_obs)
+            for a in range(env.get_num_agents()):
+                agent_obs[a] = np.concatenate((time_obs[0][a], time_obs[1][a]))
+                trial_score += all_rewards[a] / env.get_num_agents()
+
+            if done['__all__']:
+                break
+        test_scores.append(trial_score / max_steps)
+        test_dones.append(done['__all__'])
+        printProgressBar(trial + 1, nr_trials_per_test, prefix='Progress:', suffix='Complete', length=20)
+    end_time_scoring = time.time()
+    tot_test_time = end_time_scoring - start_time_scoring
+    return test_scores, test_dones, tot_test_time
