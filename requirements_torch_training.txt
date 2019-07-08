@@ -1,2 +1,3 @@
-git+https://gitlab.aicrowd.com/flatland/flatland.git@master
+# setup.py is not able to handle git+https, therefore install flatland manually
+# git+https://gitlab.aicrowd.com/flatland/flatland.git@master
 torch>=1.1.0
