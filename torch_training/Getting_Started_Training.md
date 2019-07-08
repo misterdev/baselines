@@ -20,3 +20,5 @@ The tree observation exploits the fact that a railway network is a graph and thu
 Here is a small example of a railway network with an agent in the top left corner. The tree observation is build by following the allowed transitions for that agent.
 
 ![Small_Network](https://i.imgur.com/utqMx08.png)
+
+As we move along the 
