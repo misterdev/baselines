@@ -1,6 +1,6 @@
 # How to train an Agent on Flatland
 Quick introduction on how to train a simple DQN agent using Flatland and Pytorch. At the end of this Tutorial you should be able to train a single agent to navigate in Flatland.
-We use the `training_navigation.py` file to train a simple agent with the tree observation to solve the navigation task.
+We use the `training_navigation.py` [here](https://gitlab.aicrowd.com/flatland/baselines/blob/master/torch_training/training_navigation.py) file to train a simple agent with the tree observation to solve the navigation task.
 
 ## Actions in Flatland
 Flatland is a railway simulation. Thus the actions of an agent are strongly limited to the railway network. This means that in many cases not all actions are valid.
