@@ -1,2 +1,2 @@
-git+http://gitlab.aicrowd.com/flatland/flatland.git@master
+git+https://gitlab.aicrowd.com/flatland/flatland.git@master
 torch>=1.1.0
