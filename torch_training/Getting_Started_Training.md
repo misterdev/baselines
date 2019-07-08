@@ -56,6 +56,7 @@ For training purposes the tree is flattend into a single array.
 ## Training
 ### Setting up the environment
 Let us now train a simle double dueling DQN agent to navigate to its target on flatland. We start by importing flatland
+
 ```
 from flatland.envs.generators import complex_rail_generator
 from flatland.envs.observations import TreeObsForRailEnv
@@ -63,7 +64,9 @@ from flatland.envs.rail_env import RailEnv
 from flatland.utils.rendertools import RenderTool
 from utils.observation_utils import norm_obs_clip, split_tree
 ```
+
 For this simple example we want to train on randomly generated levels using the `complex_rail_generator`. We use the following parameter for our first experiment:
+
 ```
 # Parameters for the Environment
 x_dim = 10
@@ -72,13 +75,16 @@ n_agents = 1
 n_goals = 5
 min_dist = 5
 ```
+
 As mentioned above, for this experiment we are going to use the tree observation and thus we load the observation builder:
+
 ```
 # We are training an Agent using the Tree Observation with depth 2
 observation_builder = TreeObsForRailEnv(max_depth=2)
 ```
 
 And pass it as an argument to the environment setup
+
 ````
 env = RailEnv(width=x_dim,
               height=y_dim,
@@ -88,12 +94,17 @@ env = RailEnv(width=x_dim,
               obs_builder_object=observation_builder,
               number_of_agents=n_agents)
 ```
+
 We have no successfully set up the environment for training. To visualize it in the renderer we also initiate the renderer with.
+
 ```
 env_renderer = RenderTool(env, gl="PILSVG", )
 ```
+
 ###Setting up the agent
+
 To set up a appropriate agent we need the state and action space sizes. From the discussion above about the tree observation we end up with:
+
 ```
 # Given the depth of the tree observation and the number of features per node we get the following state_size
 features_per_node = 9
@@ -106,9 +117,11 @@ state_size = features_per_node * nr_nodes
 # The action space of flatland is 5 discrete actions
 action_size = 5
 ```
+
 In the `training_navigation.py` file you will finde further variable that we initiate in order to keep track of the training progress.
 Below you see an example code to train an agent. It is important to note that we reshape and normalize the tree observation provided by the environment to facilitate training.
 To do so, we use the utility functions `split_tree(tree=np.array(obs[a]), num_features_per_node=features_per_node, current_depth=0)` and `norm_obs_clip()`. Feel free to modify the normalization as you see fit.
+
 ```
 # Split the observation tree into its parts and normalize the observation using the utility functions.
     # Build agent specific local observation
@@ -121,6 +134,7 @@ To do so, we use the utility functions `split_tree(tree=np.array(obs[a]), num_fe
         agent_data = np.clip(agent_data, -1, 1)
         agent_obs[a] = np.concatenate((np.concatenate((rail_data, distance_data)), agent_data))
 ```
+
 We now use the normalized `agent_obs` for our training loop:
 
 ```
