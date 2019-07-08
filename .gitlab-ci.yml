@@ -1,0 +1,33 @@
+image: themattrix/tox
+
+##########################################
+##########################################
+## We have to set the following env vars
+## in the admin interface :
+## - AWS_DEFAULT_REGION
+## - BUCKET_NAME
+## - AWS_ACCESS_KEY_ID
+## - AWS_SECRET_ACCESS_KEY
+
+stages:
+    - tests
+    - benchmarks_and_profiling
+    - deploy_docs
+cache:
+    paths:
+        - .tox
+
+before_script:
+    - echo "Setting Up...."
+
+tests:
+    stage: tests
+    script:
+        - apt update
+        - apt install -y libgl1-mesa-glx xvfb graphviz xdg-utils libcairo2-dev libjpeg-dev libgif-dev
+        - pip install tox
+        - xvfb-run tox -v --recreate
+
+
+
+
