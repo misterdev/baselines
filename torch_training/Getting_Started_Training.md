@@ -85,7 +85,7 @@ observation_builder = TreeObsForRailEnv(max_depth=2)
 
 And pass it as an argument to the environment setup
 
-````
+```
 env = RailEnv(width=x_dim,
               height=y_dim,
               rail_generator=complex_rail_generator(nr_start_goal=n_goals, nr_extra=5, min_dist=min_dist,
