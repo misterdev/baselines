@@ -1,9 +1,7 @@
 import time
 
 import numpy as np
-import torch
 
-from torch_training.dueling_double_dqn import Agent
 from utils.misc_utils import RandomAgent, run_test
 
 with open('parameters.txt','r') as inf:
@@ -23,8 +21,8 @@ test_results = []
 test_times = []
 test_dones = []
 # Load agent
-agent = Agent(state_size, action_size, "FC", 0)
-agent.qnetwork_local.load_state_dict(torch.load('./torch_training/Nets/avoid_checkpoint1700.pth'))
+# agent = Agent(state_size, action_size, "FC", 0)
+# agent.qnetwork_local.load_state_dict(torch.load('./torch_training/Nets/avoid_checkpoint1700.pth'))
 agent = RandomAgent(state_size, action_size)
 start_time_scoring = time.time()
 test_idx = 0

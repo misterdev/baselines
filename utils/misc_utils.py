@@ -4,8 +4,7 @@ from collections import deque
 
 import numpy as np
 from flatland.envs.generators import complex_rail_generator
-from flatland.envs.observations import TreeObsForRailEnv
-from flatland.envs.predictions import ShortestPathPredictorForRailEnv
+from flatland.envs.observations import GlobalObsForRailEnv
 from flatland.envs.rail_env import RailEnv
 from line_profiler import LineProfiler
 
@@ -69,7 +68,7 @@ def run_test(parameters, agent, test_nr=0, tree_depth=3):
     features_per_node = 9
     start_time_scoring = time.time()
     action_dict = dict()
-    nr_trials_per_test = 100
+    nr_trials_per_test = 5
     print('Running Test {} with (x_dim,y_dim) = ({},{}) and {} Agents.'.format(test_nr, parameters[0], parameters[1],
                                                                                parameters[2]))
 
@@ -88,8 +87,7 @@ def run_test(parameters, agent, test_nr=0, tree_depth=3):
                   rail_generator=complex_rail_generator(nr_start_goal=nr_paths, nr_extra=5, min_dist=min_dist,
                                                         max_dist=99999,
                                                         seed=parameters[3]),
-                  obs_builder_object=TreeObsForRailEnv(max_depth=tree_depth,
-                                                       predictor=ShortestPathPredictorForRailEnv()),
+                  obs_builder_object=GlobalObsForRailEnv(),
                   number_of_agents=parameters[2])
     max_steps = int(3 * (env.height + env.width))
     lp_step = lp(env.step)

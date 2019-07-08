@@ -16,38 +16,13 @@ from utils.observation_utils import norm_obs_clip, split_tree
 random.seed(1)
 np.random.seed(1)
 
-# Example generate a rail given a manual specification,
-# a map of tuples (cell_type, rotation)
-transition_probability = [15,  # empty cell - Case 0
-                          5,  # Case 1 - straight
-                          5,  # Case 2 - simple switch
-                          1,  # Case 3 - diamond crossing
-                          1,  # Case 4 - single slip
-                          1,  # Case 5 - double slip
-                          1,  # Case 6 - symmetrical
-                          0,  # Case 7 - dead end
-                          1,  # Case 1b (8)  - simple turn right
-                          1,  # Case 1c (9)  - simple turn left
-                          1]  # Case 2b (10) - simple switch mirrored
-
-# Example generate a random rail
 """
-env = RailEnv(width=20,
-              height=20,
-              rail_generator=random_rail_generator(cell_type_relative_proportion=transition_probability),
-              number_of_agents=1)
-
-env = RailEnv(width=15,
-              height=15,
-              rail_generator=complex_rail_generator(nr_start_goal=10, nr_extra=10, min_dist=10, max_dist=99999, seed=0),
-              number_of_agents=1)
-
-
 env = RailEnv(width=10,
               height=20, obs_builder_object=TreeObsForRailEnv(max_depth=3, predictor=ShortestPathPredictorForRailEnv()))
 env.load("./railway/complex_scene.pkl")
 file_load = True
 """
+
 x_dim = np.random.randint(8, 20)
 y_dim = np.random.randint(8, 20)
 n_agents = np.random.randint(3, 8)
@@ -66,7 +41,7 @@ file_load = False
 
 """
 observation_helper = TreeObsForRailEnv(max_depth=3, predictor=ShortestPathPredictorForRailEnv())
-env_renderer = RenderTool(env, gl="PILSVG",)
+env_renderer = RenderTool(env, gl="PILSVG", )
 handle = env.get_agent_handles()
 features_per_node = 9
 state_size = features_per_node * 85 * 2
@@ -91,7 +66,6 @@ agent.qnetwork_local.load_state_dict(torch.load('./Nets/avoid_checkpoint30000.pt
 
 demo = True
 record_images = False
-
 
 for trials in range(1, n_trials + 1):
 
@@ -130,7 +104,7 @@ for trials in range(1, n_trials + 1):
         agent_data = np.clip(agent_data, -1, 1)
         obs[a] = np.concatenate((np.concatenate((data, distance)), agent_data))
         agent_data = env.agents[a]
-        speed = 1 #np.random.randint(1,5)
+        speed = 1  # np.random.randint(1,5)
         agent_data.speed_data['speed'] = 1. / speed
 
     for i in range(2):
@@ -138,7 +112,6 @@ for trials in range(1, n_trials + 1):
     # env.obs_builder.util_print_obs_subtree(tree=obs[0], num_elements_per_node=5)
     for a in range(env.get_num_agents()):
         agent_obs[a] = np.concatenate((time_obs[0][a], time_obs[1][a]))
-
 
     score = 0
     env_done = 0
@@ -200,10 +173,10 @@ for trials in range(1, n_trials + 1):
     print(
         '\rTraining {} Agents on ({},{}).\t Episode {}\t Average Score: {:.3f}\tDones: {:.2f}%\tEpsilon: {:.2f} \t Action Probabilities: \t {}'.format(
             env.get_num_agents(), x_dim, y_dim,
-              trials,
-              np.mean(scores_window),
-              100 * np.mean(done_window),
-              eps, action_prob / np.sum(action_prob)), end=" ")
+            trials,
+            np.mean(scores_window),
+            100 * np.mean(done_window),
+            eps, action_prob / np.sum(action_prob)), end=" ")
 
     if trials % 100 == 0:
         print(
