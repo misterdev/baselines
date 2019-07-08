@@ -50,3 +50,16 @@ Each node is filled with information gathered along the path to the node. Curren
 - 9: agent in the opposite direction
     - n = number of agents present other direction than myself
     - 0 = no agent present other direction than myself
+
+For training purposes the tree is flattend into a single array.
+
+## Training
+
+Let us now train a simle double dueling DQN agent to navigate to its target on flatland. We start by importing flatland
+```
+from flatland.envs.generators import complex_rail_generator
+from flatland.envs.observations import TreeObsForRailEnv
+from flatland.envs.rail_env import RailEnv
+from flatland.utils.rendertools import RenderTool
+from utils.observation_utils import norm_obs_clip, split_tree
+```
