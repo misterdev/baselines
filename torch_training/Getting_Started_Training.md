@@ -21,4 +21,6 @@ Here is a small example of a railway network with an agent in the top left corne
 
 ![Small_Network](https://i.imgur.com/utqMx08.png)
 
-As we move along the 
+As we move along the allowed transitions we build up a tree where a new node is created at every cell where the agent has different possibilities (Switch) or the target is reached. It is important to note that the tree observation is always build according to the orientation of the agent at a given node. This means that each node always has 4 branches coming from it in the directions *Left, Forward, Right and Backward*. These are illustrated with different colors in the figure below. The tree is build form the example rail above. Nodes where there are no possibilitis are fill with `-inf` and are not all shown here for simplicity. The tree however, always hase the same number of nodes for a given tree depth.
+
+![Tree_Observation](https://i.imgur.com/VsUQOQz.png)
