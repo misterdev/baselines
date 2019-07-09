@@ -7,7 +7,7 @@ Flatland is a railway simulation. Thus the actions of an agent are strongly limi
 The possible actions of an agent are
 
 - 0 *Do Nothing*:  If the agent is moving it continues moving, if it is stopped it stays stopped
-- 1 *Deviate Left*: This action is only valid at cells where the agent can change direction towards left. If action is chosen, the left transition and a rotation of the agent orientation to the left is executed. If the agent is stopped at any position, this action will cause it to start moving in any cell where forward or left is allowed! [**Adrian**: Why forward is allowed/applied?]
+- 1 *Deviate Left*: This action is only valid at cells where the agent can change direction towards left. If action is chosen, the left transition and a rotation of the agent orientation to the left is executed. If the agent is stopped at any position, this action will cause it to start moving in any cell where forward or left is allowed!
 - 2 *Go Forward*: This action will start the agent when stopped. At switches this will chose the forward direction.
 - 3 *Deviate Right*: Exactly the same as deviate left but for right turns.
 - 4 *Stop*: This action causes the agent to stop, this is necessary to avoid conflicts in multi agent setups (Not needed for navigation).
@@ -22,7 +22,7 @@ Here is a small example of a railway network with an agent in the top left corne
 
 ![Small_Network](https://i.imgur.com/utqMx08.png)
 
-As we move along the allowed transitions we build up a tree where a new node is created at every cell where the agent has different possibilities (Switch) or the target is reached.[**Adrian**: What about a dead-end?] 
+As we move along the allowed transitions we build up a tree where a new node is created at every cell where the agent has different possibilities (Switch), dead-end or the target is reached.
 It is important to note that the tree observation is always build according to the orientation of the agent at a given node. This means that each node always has 4 branches coming from it in the directions *Left, Forward, Right and Backward*. These are illustrated with different colors in the figure below. The tree is build form the example rail above. Nodes where there are no possibilities are filled with `-inf` and are not all shown here for simplicity. The tree however, always has the same number of nodes for a given tree depth.
 
 ![Tree_Observation](https://i.imgur.com/VsUQOQz.png)
@@ -36,32 +36,26 @@ Each node is filled with information gathered along the path to the node. Curren
 
 - 3: if another agent is detected the distance in number of cells from current agent position is stored.
 
-- 4: possible conflict detected
+- 4: possible conflict detected (This only works when we use a predictor and will not be important in this tutorial)
 
-    tot_dist = Other agent predicts to pass along this cell at the same time as the agent, we store the distance in number of cells from current agent position 0 = No other agent reserve the same cell at similar time.
-    [**Adrian**: Please describe more in detail. I don't understand what the other agent does, how dows it predict, if i don't have any background this is very hard to understand]
 
-- 5: if an not usable switch (for agent) is detected we store the distance.
-    [**Adrian**  what is an not usable switch? where two tracks gets joint to getter?]
+- 5: if an not usable switch (for agent) is detected we store the distance. An unusable switch is a switch where the agent does not have any choice of path, but other agents coming from different directions might. 
 
-- 6: This feature stores the distance in number of cells to the next branching  (current node)
-    [**Adrian**: to next switch?, local distance starting at node ... to next switch / node in cell : Might better the branch length in number of cells]
 
-- 7: minimum distance from node to the agent's target given the direction of the agent if this path is chosen
-    [**Adrian**: Where is the distance from, we might have to write something about the distance map used]
+- 6: This feature stores the distance (in number of cells) to the next node (e.g. switch or target or dead-end)
 
-- 8: agent in the same direction
+- 7: minimum remaining travel distance from node to the agent's target given the direction of the agent if this path is chosen
+
+
+- 8: agent in the same direction found on path to node
     - n = number of agents present same direction (possible future use: number of other agents in the same direction in this branch)
     - 0 = no agent present same direction
-    [**Adrian**: The number of agents on the branch traveling in the same direction?]
 
-- 9: agent in the opposite direction
+- 9: agent in the opposite direction on path to node
     - n = number of agents present other direction than myself
     - 0 = no agent present other direction than myself
-    [**Adrian**: other -> opposite?]
 
 For training purposes the tree is flattend into a single array.
-[**Adrian**: maybe some words or a small graphic what that mean - optional]
 
 ## Training
 ### Setting up the environment
