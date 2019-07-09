@@ -1,13 +1,10 @@
 from collections import deque
+
 import matplotlib.pyplot as plt
 import numpy as np
 import random
-
 import torch
 from dueling_double_dqn import Agent
-from importlib_resources import path
-
-import torch_training.Nets
 
 from flatland.envs.generators import complex_rail_generator
 from flatland.envs.observations import TreeObsForRailEnv
@@ -91,7 +88,6 @@ for trials in range(1, n_trials + 1):
     # Build agent specific local observation
     for a in range(env.get_num_agents()):
         rail_data, distance_data, agent_data = split_tree(tree=np.array(obs[a]),
-                                                          num_features_per_node=features_per_node,
                                                           current_depth=0)
         rail_data = norm_obs_clip(rail_data)
         distance_data = norm_obs_clip(distance_data)
@@ -125,7 +121,6 @@ for trials in range(1, n_trials + 1):
 
         for a in range(env.get_num_agents()):
             rail_data, distance_data, agent_data = split_tree(tree=np.array(next_obs[a]),
-                                                              num_features_per_node=features_per_node,
                                                               current_depth=0)
             rail_data = norm_obs_clip(rail_data)
             distance_data = norm_obs_clip(distance_data)
@@ -185,7 +180,7 @@ env_renderer.set_new_rail()
 # Split the observation tree into its parts and normalize the observation using the utility functions.
 # Build agent specific local observation
 for a in range(env.get_num_agents()):
-    rail_data, distance_data, agent_data = split_tree(tree=np.array(obs[a]), num_features_per_node=features_per_node,
+    rail_data, distance_data, agent_data = split_tree(tree=np.array(obs[a]),
                                                       current_depth=0)
     rail_data = norm_obs_clip(rail_data)
     distance_data = norm_obs_clip(distance_data)
@@ -211,7 +206,6 @@ for step in range(max_steps):
 
     for a in range(env.get_num_agents()):
         rail_data, distance_data, agent_data = split_tree(tree=np.array(next_obs[a]),
-                                                          num_features_per_node=features_per_node,
                                                           current_depth=0)
         rail_data = norm_obs_clip(rail_data)
         distance_data = norm_obs_clip(distance_data)

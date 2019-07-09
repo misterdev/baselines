@@ -100,7 +100,7 @@ for trials in range(1, n_trials + 1):
     final_obs = obs.copy()
     final_obs_next = obs.copy()
     for a in range(env.get_num_agents()):
-        data, distance, agent_data = split_tree(tree=np.array(obs[a]), num_features_per_node=features_per_node,
+        data, distance, agent_data = split_tree(tree=np.array(obs[a]),
                                                 current_depth=0)
         data = norm_obs_clip(data)
         distance = norm_obs_clip(distance)
@@ -141,7 +141,7 @@ for trials in range(1, n_trials + 1):
         # print(all_rewards,action)
         obs_original = next_obs.copy()
         for a in range(env.get_num_agents()):
-            data, distance, agent_data = split_tree(tree=np.array(next_obs[a]), num_features_per_node=features_per_node,
+            data, distance, agent_data = split_tree(tree=np.array(next_obs[a]),
                                                     current_depth=0)
             data = norm_obs_clip(data)
             distance = norm_obs_clip(distance)

@@ -1,8 +1,9 @@
 import numpy as np
-from flatland.envs.generators import complex_rail_generator, random_rail_generator
-from flatland.envs.rail_env import RailEnv
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 from ray.rllib.utils.seed import seed as set_seed
+
+from flatland.envs.generators import complex_rail_generator, random_rail_generator
+from flatland.envs.rail_env import RailEnv
 
 
 class RailEnvRLLibWrapper(MultiAgentEnv):
@@ -63,7 +64,7 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
 
         for i_agent in range(len(self.env.agents)):
             data, distance, agent_data = self.env.obs_builder.split_tree(tree=np.array(obs[i_agent]),
-                                                                         num_features_per_node=8, current_depth=0)
+                                                                         current_depth=0)
             o[i_agent] = [data, distance, agent_data]
 
         # needed for the renderer
@@ -71,8 +72,6 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         self.agents = self.env.agents
         self.agents_static = self.env.agents_static
         self.dev_obs_dict = self.env.dev_obs_dict
-
-
 
         # If step_memory > 1, we need to concatenate it the observations in memory, only works for
         # step_memory = 1 or 2 for the moment
@@ -96,7 +95,7 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
         for i_agent in range(len(self.env.agents)):
             if i_agent not in self.agents_done:
                 data, distance, agent_data = self.env.obs_builder.split_tree(tree=np.array(obs[i_agent]),
-                                                                             num_features_per_node=8, current_depth=0)
+                                                                             current_depth=0)
 
                 o[i_agent] = [data, distance, agent_data]
                 r[i_agent] = rewards[i_agent]
