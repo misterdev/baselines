@@ -7,7 +7,7 @@ import random
 import torch
 from dueling_double_dqn import Agent
 
-import torch_training
+import torch_training.Nets
 from flatland.envs.generators import complex_rail_generator
 from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.predictions import ShortestPathPredictorForRailEnv
