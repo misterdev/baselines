@@ -1,13 +1,7 @@
-import os
-
 from setuptools import setup, find_packages
 
-# TODO: setup does not support installation from url, move to requirements*.txt
-# TODO: @master as soon as mr is merged on flatland.
-os.system(
-    'pip install git+https://gitlab.aicrowd.com/flatland/flatland.git@57-access-resources-through-importlib_resources')
-
 install_reqs = []
+dependency_links = []
 # TODO: include requirements_RLLib_training.txt
 requirements_paths = ['requirements_torch_training.txt']  # , 'requirements_RLLib_training.txt']
 for requirements_path in requirements_paths:
@@ -15,8 +9,15 @@ for requirements_path in requirements_paths:
         install_reqs += [
             s for s in [
                 line.strip(' \n') for line in f
-            ] if not s.startswith('#') and s != ''
+            ] if not s.startswith('#') and s != '' and not s.startswith('git+')
         ]
+with open(requirements_path, 'r') as f:
+    dependency_links += [
+        s for s in [
+            line.strip(' \n') for line in f
+        ] if s.startswith('git+')
+    ]
+
 requirements = install_reqs
 setup_requirements = install_reqs
 test_requirements = install_reqs
@@ -47,6 +48,7 @@ setup(
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
+    dependency_links=dependency_links,
     url='https://gitlab.aicrowd.com/flatland/baselines',
     version='0.1.1',
     zip_safe=False,
