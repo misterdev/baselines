@@ -67,9 +67,9 @@ agent = Agent(state_size, action_size, "FC", 0)
 with path(torch_training.Nets, "avoid_checkpoint30000.pth") as file_in:
     agent.qnetwork_local.load_state_dict(torch.load(file_in))
 
-demo = True
+demo = False
 record_images = False
-
+frame_step = 0
 for trials in range(1, n_trials + 1):
 
     if trials % 50 == 0 and not demo:
@@ -121,10 +121,11 @@ for trials in range(1, n_trials + 1):
     # Run episode
     for step in range(max_steps):
         if demo:
-            env_renderer.renderEnv(show=True, show_observations=True)
+            env_renderer.renderEnv(show=True, show_observations=False)
             # observation_helper.util_print_obs_subtree(obs_original[0])
             if record_images:
-                env_renderer.gl.saveImage("./Images/flatland_frame_{:04d}.bmp".format(step))
+                env_renderer.gl.saveImage("./Images/flatland_frame_{:04d}.bmp".format(frame_step))
+                frame_step += 1
         # print(step)
         # Action
         for a in range(env.get_num_agents()):
