@@ -1,3 +1,5 @@
+from sys import path
+
 import random
 from collections import deque
 
@@ -87,7 +89,9 @@ action_prob = [0] * action_size
 agent_obs = [None] * env.get_num_agents()
 agent_next_obs = [None] * env.get_num_agents()
 agent = Agent(state_size, action_size, "FC", 0)
-agent.qnetwork_local.load_state_dict(torch.load('./Nets/avoid_checkpoint30000.pth'))
+with path("torch_training/Nets", "avoid_checkpoint30000.pth") as file_in:
+    agent.qnetwork_local.load_state_dict(torch.load(file_in))
+
 
 demo = True
 record_images = False
