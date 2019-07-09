@@ -1,11 +1,11 @@
 from collections import deque
-from sys import path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import random
 import torch
 from dueling_double_dqn import Agent
+from importlib_resources import path
 
 import torch_training.Nets
 from flatland.envs.generators import complex_rail_generator
