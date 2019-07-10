@@ -1,10 +1,10 @@
+import getopt
+import random
 import sys
 from collections import deque
 
-import getopt
 import matplotlib.pyplot as plt
 import numpy as np
-import random
 import torch
 from dueling_double_dqn import Agent
 
@@ -16,15 +16,14 @@ from utils.observation_utils import norm_obs_clip, split_tree
 
 
 def main(argv):
-
     try:
         opts, args = getopt.getopt(argv, "n:", ["n_trials="])
     except getopt.GetoptError:
         print('training_navigation.py -n <n_trials>')
         sys.exit(2)
     for opt, arg in opts:
-        if opt in ('-n','--n_trials'):
-            n_trials = arg
+        if opt in ('-n', '--n_trials'):
+            n_trials = int(arg)
 
     random.seed(1)
     np.random.seed(1)
