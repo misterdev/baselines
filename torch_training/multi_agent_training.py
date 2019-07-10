@@ -27,6 +27,7 @@ def main(argv):
     for opt, arg in opts:
         if opt in ('-n', '--n_trials'):
             n_trials = int(arg)
+    print("main1")
     random.seed(1)
     np.random.seed(1)
 
@@ -42,6 +43,8 @@ def main(argv):
     n_agents = np.random.randint(3, 8)
     n_goals = n_agents + np.random.randint(0, 3)
     min_dist = int(0.75 * min(x_dim, y_dim))
+    print("main2")
+
     env = RailEnv(width=x_dim,
                   height=y_dim,
                   rail_generator=complex_rail_generator(nr_start_goal=n_goals, nr_extra=5, min_dist=min_dist,
@@ -51,15 +54,16 @@ def main(argv):
                   number_of_agents=n_agents)
     env.reset(True, True)
     file_load = False
-    """
-    
-    """
+
     observation_helper = TreeObsForRailEnv(max_depth=3, predictor=ShortestPathPredictorForRailEnv())
     env_renderer = RenderTool(env, gl="PILSVG", )
     handle = env.get_agent_handles()
     features_per_node = 9
     state_size = features_per_node * 85 * 2
     action_size = 5
+
+    print("main3")
+
     # We set the number of episodes we would like to train on
     if 'n_trials' not in locals():
         n_trials = 30000
@@ -216,4 +220,5 @@ def main(argv):
 
 
 if __name__ == '__main__':
+    print("main")
     main(sys.argv[1:])
