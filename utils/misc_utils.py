@@ -101,7 +101,7 @@ def run_test(parameters, agent, test_nr=0, tree_depth=3):
         lp_reset(True, True)
         obs = env.reset(True, True)
         for a in range(env.get_num_agents()):
-            data, distance, agent_data = split_tree(tree=np.array(obs[a]), num_features_per_node=9,
+            data, distance, agent_data = split_tree(tree=np.array(obs[a]),
                                                     current_depth=0)
             data = norm_obs_clip(data)
             distance = norm_obs_clip(distance)
@@ -127,7 +127,6 @@ def run_test(parameters, agent, test_nr=0, tree_depth=3):
 
             for a in range(env.get_num_agents()):
                 data, distance, agent_data = split_tree(tree=np.array(next_obs[a]),
-                                                        num_features_per_node=features_per_node,
                                                         current_depth=0)
                 data = norm_obs_clip(data)
                 distance = norm_obs_clip(distance)
