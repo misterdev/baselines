@@ -1,4 +1,4 @@
-git+https://gitlab.aicrowd.com/flatland/flatland.git@master
+#git+https://gitlab.aicrowd.com/flatland/flatland.git@master
 importlib-metadata>=0.17
 importlib_resources>=1.0.2
 torch>=1.1.0
