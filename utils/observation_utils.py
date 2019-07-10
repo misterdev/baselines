@@ -42,7 +42,7 @@ def norm_obs_clip(obs, clip_min=-1, clip_max=1, fixed_radius=0):
     if fixed_radius > 0:
         max_obs = fixed_radius
     else:
-        max_obs = max(1, max_lt(obs, 1000))
+        max_obs = max(1, max_lt(obs, 1000)) + 1
 
     min_obs = 0  # min(max_obs, min_lt(obs, 0))
 
