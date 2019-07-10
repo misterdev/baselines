@@ -18,4 +18,22 @@ from torch_training.dueling_double_dqn import Agent
 from utils.observation_utils import norm_obs_clip, split_tree
 
 print("multi_agent_trainging.py (1)")
-print("bla")
+
+def main(argv):
+    try:
+        opts, args = getopt.getopt(argv, "n:", ["n_trials="])
+    except getopt.GetoptError:
+        print('training_navigation.py -n <n_trials>')
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt in ('-n', '--n_trials'):
+            n_trials = int(arg)
+    print("main1")
+
+print("multi_agent_trainging.py (2)")
+
+if __name__ == '__main__':
+    print("main")
+    main(sys.argv[1:])
+
+print("multi_agent_trainging.py (3)")
