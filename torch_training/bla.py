@@ -153,7 +153,9 @@ def main(argv):
                 if demo:
                     eps = 0
                 # action = agent.act(np.array(obs[a]), eps=eps)
+                print("before act")
                 action = agent.act(agent_obs[a], eps=eps)
+                print("after act")
                 action_prob[action] += 1
                 action_dict.update({a: action})
             # Environment step
