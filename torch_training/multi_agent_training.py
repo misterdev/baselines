@@ -1,10 +1,10 @@
-import getopt
-import random
 import sys
 from collections import deque
 
+import getopt
 import matplotlib.pyplot as plt
 import numpy as np
+import random
 import torch
 from importlib_resources import path
 
@@ -17,8 +17,6 @@ from flatland.utils.rendertools import RenderTool
 from torch_training.dueling_double_dqn import Agent
 from utils.observation_utils import norm_obs_clip, split_tree
 
-print("multi_agent_trainging.py (1)")
-
 
 def main(argv):
     try:
@@ -29,7 +27,6 @@ def main(argv):
     for opt, arg in opts:
         if opt in ('-n', '--n_trials'):
             n_trials = int(arg)
-    print("main1")
     random.seed(1)
     np.random.seed(1)
 
@@ -64,8 +61,6 @@ def main(argv):
     state_size = features_per_node * 85 * 2
     action_size = 5
 
-    print("main3")
-
     # We set the number of episodes we would like to train on
     if 'n_trials' not in locals():
         n_trials = 30000
@@ -91,7 +86,6 @@ def main(argv):
     record_images = False
     frame_step = 0
 
-    print("Going to run training for {} trials...".format(n_trials))
     for trials in range(1, n_trials + 1):
 
         if trials % 50 == 0 and not demo:
@@ -221,10 +215,5 @@ def main(argv):
     plt.show()
 
 
-print("multi_agent_trainging.py (2)")
-
 if __name__ == '__main__':
-    print("main")
     main(sys.argv[1:])
-
-print("multi_agent_trainging.py (3)")
