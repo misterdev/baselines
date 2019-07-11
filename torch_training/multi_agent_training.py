@@ -89,7 +89,7 @@ def main(argv):
     with path(torch_training.Nets, "avoid_checkpoint30000.pth") as file_in:
         agent.qnetwork_local.load_state_dict(torch.load(file_in))
 
-    demo = True
+    demo = False
     record_images = False
     frame_step = 0
 
