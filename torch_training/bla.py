@@ -110,13 +110,13 @@ def main(argv):
             max_steps = int(3 * (env.height + env.width))
             agent_obs = [None] * env.get_num_agents()
             agent_next_obs = [None] * env.get_num_agents()
-        # # Reset environment
-        # if file_load:
-        #     obs = env.reset(False, False)
-        # else:
-        #     obs = env.reset(True, True)
-        # if demo:
-        #     env_renderer.set_new_rail()
+        # Reset environment
+        if file_load:
+            obs = env.reset(False, False)
+        else:
+            obs = env.reset(True, True)
+        if demo:
+            env_renderer.set_new_rail()
         # obs_original = obs.copy()
         # final_obs = obs.copy()
         # final_obs_next = obs.copy()
