@@ -7,11 +7,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from dueling_double_dqn import Agent
-
 from flatland.envs.generators import complex_rail_generator
 from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.rail_env import RailEnv
 from flatland.utils.rendertools import RenderTool
+
 from utils.observation_utils import norm_obs_clip, split_tree
 
 
@@ -52,7 +52,7 @@ def main(argv):
     env_renderer = RenderTool(env, gl="PILSVG", )
 
     # Given the depth of the tree observation and the number of features per node we get the following state_size
-    features_per_node = 9
+    features_per_node = env.obs_builder.observation_dim
     tree_depth = 2
     nr_nodes = 0
     for i in range(tree_depth + 1):

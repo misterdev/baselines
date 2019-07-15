@@ -71,7 +71,6 @@ def split_tree(tree, current_depth=0):
     :return: Returns the three different groups of distance and binary values.
     """
     num_features_per_node = TreeObsForRailEnv.observation_dim
-
     if len(tree) < num_features_per_node:
         return [], [], []
 
