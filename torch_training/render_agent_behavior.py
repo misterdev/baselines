@@ -100,7 +100,7 @@ for trials in range(1, n_trials + 1):
 
     # Run episode
     for step in range(max_steps):
-        env_renderer.render_env(show=True, show_observations=False, show_predictions=True)
+        env_renderer.render_env(show=True, show_observations=False, show_predictions=False)
 
         if record_images:
             env_renderer.gl.saveImage("./Images/flatland_frame_{:04d}.bmp".format(frame_step))
