@@ -44,6 +44,8 @@ def main(argv):
     print("main2")
 
     # Get an observation builder and predictor
+    # The predictor will always predict the shortest path from the current location of the agent.
+    # This is used to warn for potential conflicts --> Should be enhanced to get better performance!
     predictor = ShortestPathPredictorForRailEnv()
     observation_helper = TreeObsForRailEnv(max_depth=tree_depth, predictor=predictor)
 
