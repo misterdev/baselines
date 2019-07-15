@@ -1,7 +1,5 @@
 import numpy as np
 
-from flatland.envs.observations import TreeObsForRailEnv
-
 
 def max_lt(seq, val):
     """
@@ -54,7 +52,7 @@ def norm_obs_clip(obs, clip_min=-1, clip_max=1, fixed_radius=0):
     return np.clip((np.array(obs) - min_obs) / norm, clip_min, clip_max)
 
 
-def split_tree(tree, current_depth=0):
+def split_tree(tree, num_features_per_node, current_depth=0):
     """
     Splits the tree observation into different sub groups that need the same normalization.
     This is necessary because the tree observation includes two different distance:
@@ -70,7 +68,6 @@ def split_tree(tree, current_depth=0):
     :param current_depth: Keeping track of the current depth in the tree
     :return: Returns the three different groups of distance and binary values.
     """
-    num_features_per_node = TreeObsForRailEnv.observation_dim
     if len(tree) < num_features_per_node:
         return [], [], []
 
@@ -93,7 +90,7 @@ def split_tree(tree, current_depth=0):
     for children in range(4):
         child_tree = tree[(num_features_per_node + children * child_size):
                           (num_features_per_node + (children + 1) * child_size)]
-        tmp_tree_data, tmp_distance_data, tmp_agent_data = split_tree(child_tree,
+        tmp_tree_data, tmp_distance_data, tmp_agent_data = split_tree(child_tree, num_features_per_node,
                                                                       current_depth=current_depth + 1)
         if len(tmp_tree_data) > 0:
             tree_data.extend(tmp_tree_data)

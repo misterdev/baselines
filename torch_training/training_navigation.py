@@ -52,12 +52,12 @@ def main(argv):
     env_renderer = RenderTool(env, gl="PILSVG", )
 
     # Given the depth of the tree observation and the number of features per node we get the following state_size
-    features_per_node = env.obs_builder.observation_dim
+    num_features_per_node = env.obs_builder.observation_dim
     tree_depth = 2
     nr_nodes = 0
     for i in range(tree_depth + 1):
         nr_nodes += np.power(4, i)
-    state_size = features_per_node * nr_nodes
+    state_size = num_features_per_node * nr_nodes
 
     # The action space of flatland is 5 discrete actions
     action_size = 5
@@ -102,6 +102,7 @@ def main(argv):
         # Build agent specific local observation
         for a in range(env.get_num_agents()):
             rail_data, distance_data, agent_data = split_tree(tree=np.array(obs[a]),
+                                                              num_features_per_node=num_features_per_node,
                                                               current_depth=0)
             rail_data = norm_obs_clip(rail_data)
             distance_data = norm_obs_clip(distance_data)
@@ -135,6 +136,7 @@ def main(argv):
 
             for a in range(env.get_num_agents()):
                 rail_data, distance_data, agent_data = split_tree(tree=np.array(next_obs[a]),
+                                                                  num_features_per_node=num_features_per_node,
                                                                   current_depth=0)
                 rail_data = norm_obs_clip(rail_data)
                 distance_data = norm_obs_clip(distance_data)
@@ -195,6 +197,7 @@ def main(argv):
     # Build agent specific local observation
     for a in range(env.get_num_agents()):
         rail_data, distance_data, agent_data = split_tree(tree=np.array(obs[a]),
+                                                          num_features_per_node=num_features_per_node,
                                                           current_depth=0)
         rail_data = norm_obs_clip(rail_data)
         distance_data = norm_obs_clip(distance_data)
@@ -220,6 +223,7 @@ def main(argv):
 
         for a in range(env.get_num_agents()):
             rail_data, distance_data, agent_data = split_tree(tree=np.array(next_obs[a]),
+                                                              num_features_per_node=num_features_per_node,
                                                               current_depth=0)
             rail_data = norm_obs_clip(rail_data)
             distance_data = norm_obs_clip(distance_data)

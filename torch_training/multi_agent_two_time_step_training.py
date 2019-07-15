@@ -45,7 +45,7 @@ def main(argv):
 
     # Get an observation builder and predictor
     predictor = ShortestPathPredictorForRailEnv()
-    observation_helper = TreeObsForRailEnv(max_depth=tree_depth, predictor=predictor)
+    observation_helper = TreeObsForRailEnv(max_depth=tree_depth, predictor=predictor())
 
     env = RailEnv(width=x_dim,
                   height=y_dim,
@@ -57,11 +57,12 @@ def main(argv):
     env.reset(True, True)
 
     handle = env.get_agent_handles()
-    num_features_per_node = env.obs_builder.observation_dim
+    features_per_node = env.obs_builder.observation_dim
+    tree_depth = 2
     nr_nodes = 0
     for i in range(tree_depth + 1):
         nr_nodes += np.power(4, i)
-    state_size = num_features_per_node * nr_nodes
+    state_size = 2 * features_per_node * nr_nodes  # We will use two time steps per observation --> 2x state_size
     action_size = 5
 
     # We set the number of episodes we would like to train on
@@ -77,13 +78,12 @@ def main(argv):
     final_action_dict = dict()
     scores_window = deque(maxlen=100)
     done_window = deque(maxlen=100)
+    time_obs = deque(maxlen=2)
     scores = []
     dones_list = []
     action_prob = [0] * action_size
     agent_obs = [None] * env.get_num_agents()
     agent_next_obs = [None] * env.get_num_agents()
-    observation_radius = 10
-
     # Initialize the agent
     agent = Agent(state_size, action_size, "FC", 0)
 
@@ -109,7 +109,8 @@ def main(argv):
                           rail_generator=complex_rail_generator(nr_start_goal=n_goals, nr_extra=5, min_dist=min_dist,
                                                                 max_dist=99999,
                                                                 seed=0),
-                          obs_builder_object=observation_helper,
+                          obs_builder_object=TreeObsForRailEnv(max_depth=3,
+                                                               predictor=ShortestPathPredictorForRailEnv()),
                           number_of_agents=n_agents)
 
             # Adjust the parameters according to the new env.
@@ -127,60 +128,66 @@ def main(argv):
 
         # Build agent specific observations
         for a in range(env.get_num_agents()):
-            data, distance, agent_data = split_tree(tree=np.array(obs[a]), num_features_per_node=num_features_per_node,
+            data, distance, agent_data = split_tree(tree=np.array(obs[a]),
                                                     current_depth=0)
-            data = norm_obs_clip(data, fixed_radius=observation_radius)
+            data = norm_obs_clip(data)
             distance = norm_obs_clip(distance)
             agent_data = np.clip(agent_data, -1, 1)
-            agent_obs[a] = np.concatenate((np.concatenate((data, distance)), agent_data))
+            obs[a] = np.concatenate((np.concatenate((data, distance)), agent_data))
+
+        # Accumulate two time steps of observation (Here just twice the first state)
+        for i in range(2):
+            time_obs.append(obs)
+
+        # Build the agent specific double ti
+        for a in range(env.get_num_agents()):
+            agent_obs[a] = np.concatenate((time_obs[0][a], time_obs[1][a]))
 
         score = 0
         env_done = 0
-
         # Run episode
         for step in range(max_steps):
 
             # Action
             for a in range(env.get_num_agents()):
+                if demo:
+                    eps = 0
+                # action = agent.act(np.array(obs[a]), eps=eps)
                 action = agent.act(agent_obs[a], eps=eps)
                 action_prob[action] += 1
                 action_dict.update({a: action})
-
             # Environment step
-            next_obs, all_rewards, done, _ = env.step(action_dict)
 
-            # Build agent specific observations and normalize
+            next_obs, all_rewards, done, _ = env.step(action_dict)
             for a in range(env.get_num_agents()):
                 data, distance, agent_data = split_tree(tree=np.array(next_obs[a]),
-                                                        num_features_per_node=num_features_per_node, current_depth=0)
-                data = norm_obs_clip(data, fixed_radius=observation_radius)
+                                                        current_depth=0)
+                data = norm_obs_clip(data)
                 distance = norm_obs_clip(distance)
                 agent_data = np.clip(agent_data, -1, 1)
-                agent_next_obs[a] = np.concatenate((np.concatenate((data, distance)), agent_data))
+                next_obs[a] = np.concatenate((np.concatenate((data, distance)), agent_data))
+            time_obs.append(next_obs)
 
             # Update replay buffer and train agent
             for a in range(env.get_num_agents()):
+                agent_next_obs[a] = np.concatenate((time_obs[0][a], time_obs[1][a]))
                 if done[a]:
                     final_obs[a] = agent_obs[a].copy()
                     final_obs_next[a] = agent_next_obs[a].copy()
                     final_action_dict.update({a: action_dict[a]})
-                if not done[a]:
+                if not demo and not done[a]:
                     agent.step(agent_obs[a], action_dict[a], all_rewards[a], agent_next_obs[a], done[a])
                 score += all_rewards[a] / env.get_num_agents()
 
-            # Copy observation
             agent_obs = agent_next_obs.copy()
-
             if done['__all__']:
                 env_done = 1
                 for a in range(env.get_num_agents()):
                     agent.step(final_obs[a], final_action_dict[a], all_rewards[a], final_obs_next[a], done[a])
                 break
-
         # Epsilon decay
         eps = max(eps_end, eps_decay * eps)  # decrease epsilon
 
-        # Collection information about training
         done_window.append(env_done)
         scores_window.append(score / max_steps)  # save most recent score
         scores.append(np.mean(scores_window))
