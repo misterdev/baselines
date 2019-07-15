@@ -245,9 +245,9 @@ We now use the normalized `agent_obs` for our training loop:
 
 Running the `multi_agent_training.py` file trains a simple agent to navigate to any random target within the railway network. After running you should see a learning curve similiar to this one:
 
-![Learning_curve](https://i.imgur.com/yVGXpUy.png)
+*Learning curve provided soon*
 
 and the agent behavior should look like this:
 
-![Single_Agent_Navigation](https://i.imgur.com/t5ULr4L.gif)
+*Gif provided soon*
 
