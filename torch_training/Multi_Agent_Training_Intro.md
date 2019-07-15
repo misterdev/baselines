@@ -12,6 +12,11 @@ The possible actions of an agent are
 - 3 *Deviate Right*: Exactly the same as deviate left but for right turns.
 - 4 *Stop*: This action causes the agent to stop, this is necessary to avoid conflicts in multi agent setups (Not needed for navigation).
 
+## Shortest path predictor
+With multiple agents alot of conlflicts will arise on the railway network. These conflicts arise because different agents want to occupie the same cells at the same time. Due to the nature of the railway network and the dynamic of the railway agents (can't turn around), the conflicts have to be detected in advance in order to avoid them. If agents are facing each other and don't have any options to deviate from their path it is called a *deadlock*.
+Therefore we introduce a simple prediction function that predicts the most likely (here shortest) path of all the agents. Furthermore, the prediction is withdrawn if an agent stopps and replaced by a prediction that the agent will stay put. The predictions allow the agents to detect possible conflicts before they happen and thus performe counter measures.
+*ATTENTION*: This is a very basic implementation of a predictor. It will not solve all the problems because it always predicts shortest paths and not alternative routes. It is up to you to come up with much more clever predictors to avod conflicts!
+
 ## Tree Observation
 Flatland offers three basic observations from the beginning. We encourage you to develop your own observations that are better suited for this specific task.
 
@@ -57,34 +62,41 @@ Each node is filled with information gathered along the path to the node. Curren
 
 For training purposes the tree is flattend into a single array.
 
+
 ## Training
 ### Setting up the environment
-Let us now train a simle double dueling DQN agent to navigate to its target on flatland. We start by importing flatland
+Let us now train a simle double dueling DQN agent to detect to find its target and try to avoid conflicts on flatland. We start by importing the necessary packages from Flatland. Note that we now also import a predictor from `flatland.envs.predictions`
 
 ```
 from flatland.envs.generators import complex_rail_generator
 from flatland.envs.observations import TreeObsForRailEnv
+from flatland.envs.predictions import ShortestPathPredictorForRailEnv
 from flatland.envs.rail_env import RailEnv
-from flatland.utils.rendertools import RenderTool
 from utils.observation_utils import norm_obs_clip, split_tree
 ```
 
-For this simple example we want to train on randomly generated levels using the `complex_rail_generator`. We use the following parameter for our first experiment:
+For this simple example we want to train on randomly generated levels using the `complex_rail_generator`. The training curriculum will use different sets of parameters throughout training to enhance generalizability of the solution.
 
 ```
-# Parameters for the Environment
-x_dim = 10
-y_dim = 10
-n_agents = 1
-n_goals = 5
-min_dist = 5
+# Initialize a random map with a random number of agents
+x_dim = np.random.randint(8, 20)
+y_dim = np.random.randint(8, 20)
+n_agents = np.random.randint(3, 8)
+n_goals = n_agents + np.random.randint(0, 3)
+min_dist = int(0.75 * min(x_dim, y_dim))
+tree_depth = 3
 ```
 
-As mentioned above, for this experiment we are going to use the tree observation and thus we load the observation builder:
+As mentioned above, for this experiment we are going to use the tree observation and thus we load the observation builder. Also we are now using the predictor as well which is passed to the observation builder.
 
 ```
-# We are training an Agent using the Tree Observation with depth 2
-observation_builder = TreeObsForRailEnv(max_depth=2)
+"""
+ Get an observation builder and predictor:
+ The predictor will always predict the shortest path from the current location of the agent.
+ This is used to warn for potential conflicts --> Should be enhanced to get better performance!
+"""
+predictor = ShortestPathPredictorForRailEnv()
+observation_helper = TreeObsForRailEnv(max_depth=tree_depth, predictor=predictor)
 ```
 
 And pass it as an argument to the environment setup
@@ -101,31 +113,21 @@ env = RailEnv(width=x_dim,
 
 We have no successfully set up the environment for training. To visualize it in the renderer we also initiate the renderer with.
 
-```
-env_renderer = RenderTool(env, gl="PILSVG", )
-```
-
 ###Setting up the agent
 
 To set up a appropriate agent we need the state and action space sizes. From the discussion above about the tree observation we end up with:
 
-[**Adrian**: I just wonder, why this is not done in seperate method in the the observation: get_state_size, then we don't have to write down much more. And the user don't need to 
-understand anything about the oberservation. I suggest moving this into the obersvation, base ObservationBuilder declare it as an abstract method. ... ] 
 
 ```
-# Given the depth of the tree observation and the number of features per node we get the following state_size
-features_per_node = 9
-tree_depth = 2
+num_features_per_node = env.obs_builder.observation_dim
 nr_nodes = 0
 for i in range(tree_depth + 1):
     nr_nodes += np.power(4, i)
-state_size = features_per_node * nr_nodes
-
-# The action space of flatland is 5 discrete actions
+state_size = num_features_per_node * nr_nodes
 action_size = 5
 ```
 
-In the `training_navigation.py` file you will find further variable that we initiate in order to keep track of the training progress.
+In the `multi_agent_training.py` file you will find further variable that we initiate in order to keep track of the training progress.
 Below you see an example code to train an agent. It is important to note that we reshape and normalize the tree observation provided by the environment to facilitate training.
 To do so, we use the utility functions `split_tree(tree=np.array(obs[a]), num_features_per_node=features_per_node, current_depth=0)` and `norm_obs_clip()`. Feel free to modify the normalization as you see fit.
 
@@ -143,81 +145,105 @@ To do so, we use the utility functions `split_tree(tree=np.array(obs[a]), num_fe
 ```
 
 We now use the normalized `agent_obs` for our training loop:
-[**Adrian**: Same question as above, why not done in the observation class?]
+
 
 ```
-for trials in range(1, n_trials + 1):
+# Do training over n_episodes
+    for episodes in range(1, n_episodes + 1):
+        """
+        Training Curriculum: In order to get good generalization we change the number of agents
+        and the size of the levels every 50 episodes.
+        """
+        if episodes % 50 == 0:
+            x_dim = np.random.randint(8, 20)
+            y_dim = np.random.randint(8, 20)
+            n_agents = np.random.randint(3, 8)
+            n_goals = n_agents + np.random.randint(0, 3)
+            min_dist = int(0.75 * min(x_dim, y_dim))
+            env = RailEnv(width=x_dim,
+                          height=y_dim,
+                          rail_generator=complex_rail_generator(nr_start_goal=n_goals, nr_extra=5, min_dist=min_dist,
+                                                                max_dist=99999,
+                                                                seed=0),
+                          obs_builder_object=observation_helper,
+                          number_of_agents=n_agents)
 
-    # Reset environment
-    obs = env.reset(True, True)
-    if not Training:
-        env_renderer.set_new_rail()
+            # Adjust the parameters according to the new env.
+            max_steps = int(3 * (env.height + env.width))
+            agent_obs = [None] * env.get_num_agents()
+            agent_next_obs = [None] * env.get_num_agents()
 
-    # Split the observation tree into its parts and normalize the observation using the utility functions.
-    # Build agent specific local observation
-    for a in range(env.get_num_agents()):
-        rail_data, distance_data, agent_data = split_tree(tree=np.array(obs[a]),
-                                                          num_features_per_node=features_per_node,
-                                                          current_depth=0)
-        rail_data = norm_obs_clip(rail_data)
-        distance_data = norm_obs_clip(distance_data)
-        agent_data = np.clip(agent_data, -1, 1)
-        agent_obs[a] = np.concatenate((np.concatenate((rail_data, distance_data)), agent_data))
+        # Reset environment
+        obs = env.reset(True, True)
 
-    # Reset score and done
-    score = 0
-    env_done = 0
+        # Setup placeholder for finals observation of a single agent. This is necessary because agents terminate at
+        # different times during an episode
+        final_obs = agent_obs.copy()
+        final_obs_next = agent_next_obs.copy()
 
-    # Run episode
-    for step in range(max_steps):
-
-        # Only render when not triaing
-        if not Training:
-            env_renderer.renderEnv(show=True, show_observations=True)
-
-        # Chose the actions
+        # Build agent specific observations
         for a in range(env.get_num_agents()):
-            if not Training:
-                eps = 0
-
-            action = agent.act(agent_obs[a], eps=eps)
-            action_dict.update({a: action})
-
-            # Count number of actions takes for statistics
-            action_prob[action] += 1
-
-        # Environment step
-        next_obs, all_rewards, done, _ = env.step(action_dict)
-
-        for a in range(env.get_num_agents()):
-            rail_data, distance_data, agent_data = split_tree(tree=np.array(next_obs[a]),
-                                                              num_features_per_node=features_per_node,
-                                                              current_depth=0)
-            rail_data = norm_obs_clip(rail_data)
-            distance_data = norm_obs_clip(distance_data)
+            data, distance, agent_data = split_tree(tree=np.array(obs[a]), num_features_per_node=num_features_per_node,
+                                                    current_depth=0)
+            data = norm_obs_clip(data, fixed_radius=observation_radius)
+            distance = norm_obs_clip(distance)
             agent_data = np.clip(agent_data, -1, 1)
-            agent_next_obs[a] = np.concatenate((np.concatenate((rail_data, distance_data)), agent_data))
+            agent_obs[a] = np.concatenate((np.concatenate((data, distance)), agent_data))
 
-        # Update replay buffer and train agent
-        for a in range(env.get_num_agents()):
+        score = 0
+        env_done = 0
 
-            # Remember and train agent
-            if Training:
-                agent.step(agent_obs[a], action_dict[a], all_rewards[a], agent_next_obs[a], done[a])
+        # Run episode
+        for step in range(max_steps):
 
-            # Update the current score
-            score += all_rewards[a] / env.get_num_agents()
+            # Action
+            for a in range(env.get_num_agents()):
+                action = agent.act(agent_obs[a], eps=eps)
+                action_prob[action] += 1
+                action_dict.update({a: action})
 
-        agent_obs = agent_next_obs.copy()
-        if done['__all__']:
-            env_done = 1
-            break
+            # Environment step
+            next_obs, all_rewards, done, _ = env.step(action_dict)
 
-    # Epsilon decay
-    eps = max(eps_end, eps_decay * eps)  # decrease epsilon
+            # Build agent specific observations and normalize
+            for a in range(env.get_num_agents()):
+                data, distance, agent_data = split_tree(tree=np.array(next_obs[a]),
+                                                        num_features_per_node=num_features_per_node, current_depth=0)
+                data = norm_obs_clip(data, fixed_radius=observation_radius)
+                distance = norm_obs_clip(distance)
+                agent_data = np.clip(agent_data, -1, 1)
+                agent_next_obs[a] = np.concatenate((np.concatenate((data, distance)), agent_data))
+
+            # Update replay buffer and train agent
+            for a in range(env.get_num_agents()):
+                if done[a]:
+                    final_obs[a] = agent_obs[a].copy()
+                    final_obs_next[a] = agent_next_obs[a].copy()
+                    final_action_dict.update({a: action_dict[a]})
+                if not done[a]:
+                    agent.step(agent_obs[a], action_dict[a], all_rewards[a], agent_next_obs[a], done[a])
+                score += all_rewards[a] / env.get_num_agents()
+
+            # Copy observation
+            agent_obs = agent_next_obs.copy()
+
+            if done['__all__']:
+                env_done = 1
+                for a in range(env.get_num_agents()):
+                    agent.step(final_obs[a], final_action_dict[a], all_rewards[a], final_obs_next[a], done[a])
+                break
+
+        # Epsilon decay
+        eps = max(eps_end, eps_decay * eps)  # decrease epsilon
+
+        # Collection information about training
+        done_window.append(env_done)
+        scores_window.append(score / max_steps)  # save most recent score
+        scores.append(np.mean(scores_window))
+        dones_list.append((np.mean(done_window)))
 ```
 
-Running the `navigation_training.py` file trains a simple agent to navigate to any random target within the railway network. After running you should see a learning curve similiar to this one:
+Running the `multi_agent_training.py` file trains a simple agent to navigate to any random target within the railway network. After running you should see a learning curve similiar to this one:
 
 ![Learning_curve](https://i.imgur.com/yVGXpUy.png)
 
