@@ -53,6 +53,7 @@ state_size = num_features_per_node * nr_nodes
 action_size = 5
 
 n_trials = 100
+observation_radius = 10
 max_steps = int(3 * (env.height + env.width))
 eps = 1.
 eps_end = 0.005
@@ -68,7 +69,7 @@ action_prob = [0] * action_size
 agent_obs = [None] * env.get_num_agents()
 agent_next_obs = [None] * env.get_num_agents()
 agent = Agent(state_size, action_size, "FC", 0)
-with path(torch_training.Nets, "avoid_checkpoint2900.pth") as file_in:
+with path(torch_training.Nets, "avoid_checkpoint49700.pth") as file_in:
     agent.qnetwork_local.load_state_dict(torch.load(file_in))
 
 record_images = False
@@ -84,7 +85,7 @@ for trials in range(1, n_trials + 1):
     for a in range(env.get_num_agents()):
         data, distance, agent_data = split_tree(tree=np.array(obs[a]), num_features_per_node=num_features_per_node,
                                                 current_depth=0)
-        data = norm_obs_clip(data)
+        data = norm_obs_clip(data, fixed_radius=observation_radius)
         distance = norm_obs_clip(distance)
         agent_data = np.clip(agent_data, -1, 1)
         agent_obs[a] = np.concatenate((np.concatenate((data, distance)), agent_data))
@@ -106,9 +107,10 @@ for trials in range(1, n_trials + 1):
 
         next_obs, all_rewards, done, _ = env.step(action_dict)
         for a in range(env.get_num_agents()):
-            data, distance, agent_data = split_tree(tree=np.array(obs[a]), num_features_per_node=num_features_per_node,
+            data, distance, agent_data = split_tree(tree=np.array(next_obs[a]),
+                                                    num_features_per_node=num_features_per_node,
                                                     current_depth=0)
-            data = norm_obs_clip(data)
+            data = norm_obs_clip(data, fixed_radius=observation_radius)
             distance = norm_obs_clip(distance)
             agent_data = np.clip(agent_data, -1, 1)
             agent_next_obs[a] = np.concatenate((np.concatenate((data, distance)), agent_data))
