@@ -12,7 +12,7 @@ Use this introductions to get used to the Flatland environment. Then build your 
 
 With the above introductions you will solve tasks like these and even more...
 
-![Conflict_Avoidance](https://i.imgur.com/oOsz7km.gif)
+![Conflict_Avoidance](https://i.imgur.com/AvBHKaD.gif)
 
 
 # RLLib Training
