@@ -17,7 +17,7 @@ from utils.observation_utils import norm_obs_clip, split_tree
 random.seed(3)
 np.random.seed(2)
 """
-file_name = "./railway/simple_avoid.pkl"
+file_name = "./railway/flatland.pkl"
 env = RailEnv(width=10,
               height=20,
               rail_generator=rail_from_file(file_name),
@@ -54,7 +54,7 @@ state_size = num_features_per_node * nr_nodes
 action_size = 5
 
 n_trials = 10
-observation_radius = 20
+observation_radius = 10
 max_steps = int(3 * (env.height + env.width))
 eps = 1.
 eps_end = 0.005
@@ -70,7 +70,7 @@ action_prob = [0] * action_size
 agent_obs = [None] * env.get_num_agents()
 agent_next_obs = [None] * env.get_num_agents()
 agent = Agent(state_size, action_size, "FC", 0)
-with path(torch_training.Nets, "avoid_checkpoint60000.pth") as file_in:
+with path(torch_training.Nets, "avoid_checkpoint36600.pth") as file_in:
     agent.qnetwork_local.load_state_dict(torch.load(file_in))
 
 record_images = False
@@ -93,7 +93,7 @@ for trials in range(1, n_trials + 1):
 
     # Run episode
     for step in range(max_steps):
-        env_renderer.render_env(show=True, show_observations=True, show_predictions=False)
+        env_renderer.render_env(show=True, show_observations=False, show_predictions=True)
 
         if record_images:
             env_renderer.gl.save_image("./Images/Avoiding/flatland_frame_{:04d}.bmp".format(frame_step))
