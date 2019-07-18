@@ -2,6 +2,7 @@ This repository allows to run Rail Environment multi agent training with the RLL
 
 ## Installation:
 ```sh
+pip install gym
 pip install ray
 pip install gin-config
 ```
@@ -57,7 +58,7 @@ More documentation on how to use gin-config can be found on the github repositor
 ## Run an example:
 To start a training on a 20X20 map, with different numbers of agents initialized at each episode, on can run the train_experiment.py script:
 ```
-python baselines/RLLib_training/train_experiment.py
+python RLLib_training/train_experiment.py
 ```
 This will load the gin config file in the folder `experiment_configs/config_examples`.
 
