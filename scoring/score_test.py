@@ -6,7 +6,8 @@ from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.predictions import ShortestPathPredictorForRailEnv
 
 from torch_training.dueling_double_dqn import Agent
-from utils.misc_utils import run_test
+from scoring.utils.misc_utils import run_test
+from utils.observation_utils import normalize_observation
 
 with open('parameters.txt', 'r') as inf:
     parameters = eval(inf.read())
@@ -40,6 +41,7 @@ score_board = []
 for test_nr in parameters:
     current_parameters = parameters[test_nr]
     test_score, test_dones, test_time = run_test(current_parameters, agent, observation_builder=observation_builder,
+                                                 observation_wrapper=normalize_observation,
                                                  test_nr=test_nr, nr_trials_per_test=10)
     print('{} score was {:.3f} with {:.2f}% environments solved. Test took {:.2f} Seconds to complete.\n'.format(
         test_nr,

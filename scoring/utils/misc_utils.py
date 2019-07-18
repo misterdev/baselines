@@ -63,7 +63,7 @@ def run_test(parameters, agent, observation_builder=None, observation_wrapper=No
         env = RailEnv(width=3,
                       height=3,
                       rail_generator=rail_from_file(file_name),
-                      obs_builder_object=observation_builder(),
+                      obs_builder_object=observation_builder,
                       number_of_agents=1,
                       )
 
