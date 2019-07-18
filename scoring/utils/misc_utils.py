@@ -35,46 +35,17 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
         print('')
 
 
-class RandomAgent:
-
-    def __init__(self, state_size, action_size):
-        self.state_size = state_size
-        self.action_size = action_size
-
-    def act(self, state, eps=0):
-        """
-        :param state: input is the observation of the agent
-        :return: returns an action
-        """
-        return np.random.choice(np.arange(self.action_size))
-
-    def step(self, memories):
-        """
-        Step function to improve agent by adjusting policy given the observations
-
-        :param memories: SARS Tuple to be
-        :return:
-        """
-        return
-
-    def save(self, filename):
-        # Store the current policy
-        return
-
-    def load(self, filename):
-        # Load a policy
-        return
-
-
-def run_test(parameters, agent, test_nr=0, tree_depth=3):
+def run_test(parameters, agent, observation_builder=None, observation_wrapper=None, test_nr=0, nr_trials_per_test=100):
     # Parameter initialization
     features_per_node = 9
     start_time_scoring = time.time()
     action_dict = dict()
-    nr_trials_per_test = 100
+
     print('Running {} with (x_dim,y_dim) = ({},{}) and {} Agents.'.format(test_nr, parameters[0], parameters[1],
                                                                           parameters[2]))
-
+    if observation_builder == None:
+        print("No observation defined!")
+        return
     # Reset all measurements
     test_scores = []
     test_dones = []
@@ -87,47 +58,39 @@ def run_test(parameters, agent, test_nr=0, tree_depth=3):
     printProgressBar(0, nr_trials_per_test, prefix='Progress:', suffix='Complete', length=20)
     for trial in range(nr_trials_per_test):
         # Reset the env
-        file_name = "./Envs/{}/Level_{}.pkl".format(test_nr, trial)
+        file_name = "./Tests/{}/Level_{}.pkl".format(test_nr, trial)
 
         env = RailEnv(width=3,
                       height=3,
                       rail_generator=rail_from_file(file_name),
-                      obs_builder_object=TreeObsForRailEnv(max_depth=tree_depth, predictor=ShortestPathPredictorForRailEnv()),
+                      obs_builder_object=observation_builder(),
                       number_of_agents=1,
                       )
 
         obs = env.reset()
-        agent_obs = [None] * env.get_num_agents()
-        for a in range(env.get_num_agents()):
-            data, distance, agent_data = split_tree(tree=np.array(obs[a]), num_features_per_node=9,
-                                                    current_depth=0)
-            data = norm_obs_clip(data, fixed_radius=10)
-            distance = norm_obs_clip(distance)
-            agent_data = np.clip(agent_data, -1, 1)
-            agent_obs[a] = np.concatenate((np.concatenate((data, distance)), agent_data))
+
+        if observation_wrapper is not None:
+            for a in range(env.get_num_agents()):
+                obs[a] = observation_wrapper(obs[a])
 
 
         # Run episode
         trial_score = 0
-        max_steps = int(max_time_factor*  (env.height + env.width))
+        max_steps = int(max_time_factor * (env.height + env.width))
         for step in range(max_steps):
 
             for a in range(env.get_num_agents()):
-                action = agent.act(agent_obs[a], eps=0)
+                action = agent.act(obs[a], eps=0)
                 action_dict.update({a: action})
 
             # Environment step
-            next_obs, all_rewards, done, _ = env.step(action_dict)
+            obs, all_rewards, done, _ = env.step(action_dict)
 
             for a in range(env.get_num_agents()):
-                data, distance, agent_data = split_tree(tree=np.array(next_obs[a]),
-                                                        num_features_per_node=features_per_node,
-                                                        current_depth=0)
-                data = norm_obs_clip(data, fixed_radius=10)
-                distance = norm_obs_clip(distance)
-                agent_data = np.clip(agent_data, -1, 1)
-                agent_obs[a] = np.concatenate((np.concatenate((data, distance)), agent_data))
+                if observation_wrapper is not None:
+                    obs[a] = observation_wrapper(obs[a])
                 trial_score += np.mean(all_rewards[a])
+
             if done['__all__']:
                 break
         test_scores.append(trial_score / max_steps)
@@ -138,9 +101,8 @@ def run_test(parameters, agent, test_nr=0, tree_depth=3):
     return test_scores, test_dones, tot_test_time
 
 
-def create_testsfiles(parameters, test_nr=0):
+def create_testfiles(parameters, test_nr=0, nr_trials_per_test=100):
     # Parameter initialization
-    nr_trials_per_test = 100
     print('Creating {} with (x_dim,y_dim) = ({},{}) and {} Agents.'.format(test_nr, parameters[0], parameters[1],
                                                                            parameters[2]))
     # Reset environment
@@ -159,7 +121,7 @@ def create_testsfiles(parameters, test_nr=0):
     for trial in range(nr_trials_per_test):
         # Reset the env
         env.reset(True, True)
-        env.save("./Envs/{}/Level_{}.pkl".format(test_nr, trial))
+        env.save("./Tests/{}/Level_{}.pkl".format(test_nr, trial))
         printProgressBar(trial + 1, nr_trials_per_test, prefix='Progress:', suffix='Complete', length=20)
 
     return
@@ -171,7 +133,7 @@ def render_test(parameters, test_nr=0, nr_examples=5):
         print('Showing {} Level {} with (x_dim,y_dim) = ({},{}) and {} Agents.'.format(test_nr, trial, parameters[0],
                                                                                        parameters[1],
                                                                                        parameters[2]))
-        file_name = "./Envs/{}/Level_{}.pkl".format(test_nr, trial)
+        file_name = "./Tests/{}/Level_{}.pkl".format(test_nr, trial)
 
         env = RailEnv(width=1,
                       height=1,
@@ -210,7 +172,7 @@ def run_test_sequential(parameters, agent, test_nr=0, tree_depth=3):
     printProgressBar(0, nr_trials_per_test, prefix='Progress:', suffix='Complete', length=20)
     for trial in range(nr_trials_per_test):
         # Reset the env
-        file_name = "./Envs/{}/Level_{}.pkl".format(test_nr, trial)
+        file_name = "./Tests/{}/Level_{}.pkl".format(test_nr, trial)
 
         env = RailEnv(width=3,
                       height=3,

@@ -2,7 +2,7 @@ import time
 
 import numpy as np
 
-from utils.misc_utils import create_testsfiles
+from utils.misc_utils import create_testfiles
 
 with open('parameters.txt', 'r') as inf:
     parameters = eval(inf.read())
@@ -21,5 +21,4 @@ test_idx = 0
 
 for test_nr in parameters:
     current_parameters = parameters[test_nr]
-    create_testsfiles(current_parameters,test_nr)
-
+    create_testfiles(current_parameters, test_nr, nr_trials_per_test=100)

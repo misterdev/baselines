@@ -2,10 +2,13 @@ import time
 
 import numpy as np
 import torch
-from utils.misc_utils import run_test,run_test_sequential
-from dueling_double_dqn import Agent
-from sequential_agent.simple_order_agent import OrderedAgent
-with open('parameters.txt','r') as inf:
+from flatland.envs.observations import TreeObsForRailEnv
+from flatland.envs.predictions import ShortestPathPredictorForRailEnv
+
+from torch_training.dueling_double_dqn import Agent
+from utils.misc_utils import run_test
+
+with open('parameters.txt', 'r') as inf:
     parameters = eval(inf.read())
 
 # Parameter initialization
@@ -23,29 +26,26 @@ test_times = []
 test_dones = []
 sequential_agent_test = False
 
+# Load your agent
+agent = Agent(state_size, action_size, "FC", 0)
+agent.qnetwork_local.load_state_dict(torch.load('../torch_training/Nets/avoid_checkpoint60000.pth'))
 
-# Load agent
-if sequential_agent_test:
-    agent = OrderedAgent()
-else:
-    agent = Agent(state_size, action_size, "FC", 0)
-    agent.qnetwork_local.load_state_dict(torch.load('./Nets/avoid_checkpoint60000.pth'))
+# Load the necessary Observation Builder and Predictor
+predictor = ShortestPathPredictorForRailEnv()
+observation_builder = TreeObsForRailEnv(max_depth=tree_depth, predictor=predictor)
 
 start_time_scoring = time.time()
 
 score_board = []
 for test_nr in parameters:
     current_parameters = parameters[test_nr]
-    if sequential_agent_test:
-        test_score, test_dones, test_time = run_test_sequential(current_parameters, agent, test_nr=test_nr, tree_depth=1)
-
-    else:
-        test_score, test_dones, test_time = run_test(current_parameters, agent, test_nr=test_nr,tree_depth=3)
+    test_score, test_dones, test_time = run_test(current_parameters, agent, observation_builder=observation_builder,
+                                                 test_nr=test_nr, nr_trials_per_test=10)
     print('{} score was {:.3f} with {:.2f}% environments solved. Test took {:.2f} Seconds to complete.\n'.format(
         test_nr,
         np.mean(test_score), np.mean(test_dones) * 100, test_time))
 
-    score_board.append([np.mean(test_score),  np.mean(test_dones) * 100, test_time])
+    score_board.append([np.mean(test_score), np.mean(test_dones) * 100, test_time])
 print('---------')
 print(' RESULTS')
 print('---------')
