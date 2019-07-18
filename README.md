@@ -24,4 +24,4 @@ If you run the `run_test.py` file you will see a simple agent that solves the le
 
 Here you see it in action:
 
-![Sequential_Agent](https://i.imgur.com/VrTQVeM.gif)
+![Sequential_Agent](https://i.imgur.com/DsbG6zK.gif)
