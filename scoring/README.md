@@ -61,20 +61,34 @@ test_score, test_dones, test_time = run_test(current_parameters, agent, observat
 In order to speed up the test time you can limit the number of trials per test (`nr_trials_per_test=10`). After you have made these changes to the file you can run `python score_tests.py` which will produce an output similiar to this:
 
 ```
-Creating Test_0 with (x_dim,y_dim) = (10,10) and 1 Agents.
+Running Test_0 with (x_dim,y_dim) = (10,10) and 1 Agents.
 Progress: |********************| 100.0% Complete 
-Creating Test_1 with (x_dim,y_dim) = (10,10) and 3 Agents.
+Test_0 score was -0.380 with 100.00% environments solved. Test took 0.62 Seconds to complete.
+
+Running Test_1 with (x_dim,y_dim) = (10,10) and 3 Agents.
 Progress: |********************| 100.0% Complete 
-Creating Test_2 with (x_dim,y_dim) = (10,10) and 5 Agents.
+Test_1 score was -1.540 with 80.00% environments solved. Test took 2.67 Seconds to complete.
+
+Running Test_2 with (x_dim,y_dim) = (10,10) and 5 Agents.
 Progress: |********************| 100.0% Complete 
-Creating Test_3 with (x_dim,y_dim) = (50,10) and 10 Agents.
-Progress: |********************| 100.0% Complete 
-Creating Test_4 with (x_dim,y_dim) = (20,50) and 10 Agents.
-Progress: |********************| 100.0% Complete 
-Creating Test_5 with (x_dim,y_dim) = (20,20) and 15 Agents.
-Progress: |********************| 100.0% Complete 
-Creating Test_6 with (x_dim,y_dim) = (50,50) and 10 Agents.
-Progress: |********************| 100.0% Complete 
-Creating Test_7 with (x_dim,y_dim) = (50,50) and 40 Agents.
-Progress: |********____________| 44.0% Complete
+Test_2 score was -2.460 with 80.00% environments solved. Test took 4.48 Seconds to complete.
+
+Running Test_3 with (x_dim,y_dim) = (50,10) and 10 Agents.
+Progress: |**__________________| 10.0% Complete
 ```
+
+The score is computed by
+
+```
+score = sum(mean(all_rewards))/max_steps
+```
+which is the sum over all time steps and the mean over all agents of the rewards. We normalize it by the maximum number of allowed steps for a level size. The max number of allowed steps is
+
+```
+max_steps = mult_factor * (env.height+env.width)
+```
+Where the `mult_factor` is a multiplication factor to allow for more time if difficulty is to high.
+
+The number of solved envs is just the percentage of episodes that terminated with all agents done.
+
+How these two numbers are used to define your final score will be posted on the [flatland page](https://www.aicrowd.com/organizers/sbb/challenges/flatland-challenge)
