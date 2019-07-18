@@ -37,9 +37,9 @@ tree_depth = 1
 observation_helper = TreeObsForRailEnv(max_depth=tree_depth, predictor=ShortestPathPredictorForRailEnv())
 env_renderer = RenderTool(env, gl="PILSVG", )
 handle = env.get_agent_handles()
-n_trials = 10
+n_trials = 1
 max_steps = 3 * (env.height + env.width)
-record_images = False
+record_images = True
 agent = OrderedAgent()
 action_dict = dict()
 

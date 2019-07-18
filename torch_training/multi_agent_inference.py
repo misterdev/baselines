@@ -12,11 +12,11 @@ from importlib_resources import path
 
 import torch_training.Nets
 from torch_training.dueling_double_dqn import Agent
-from utils.observation_utils import norm_obs_clip, split_tree
+from utils.observation_utils import normalize_observation
 
 random.seed(3)
 np.random.seed(2)
-
+"""
 file_name = "./railway/complex_scene.pkl"
 env = RailEnv(width=10,
               height=20,
@@ -27,9 +27,9 @@ y_dim = env.height
 
 """
 
-x_dim = 50 #np.random.randint(8, 20)
-y_dim = 50 #np.random.randint(8, 20)
-n_agents = 20  # np.random.randint(3, 8)
+x_dim = 10  # np.random.randint(8, 20)
+y_dim = 10  # np.random.randint(8, 20)
+n_agents = 5  # np.random.randint(3, 8)
 n_goals = n_agents + np.random.randint(0, 3)
 min_dist = int(0.75 * min(x_dim, y_dim))
 
@@ -41,7 +41,7 @@ env = RailEnv(width=x_dim,
               obs_builder_object=TreeObsForRailEnv(max_depth=3, predictor=ShortestPathPredictorForRailEnv()),
               number_of_agents=n_agents)
 env.reset(True, True)
-"""
+
 tree_depth = 3
 observation_helper = TreeObsForRailEnv(max_depth=tree_depth, predictor=ShortestPathPredictorForRailEnv())
 env_renderer = RenderTool(env, gl="PILSVG", )
@@ -53,7 +53,7 @@ for i in range(tree_depth + 1):
 state_size = num_features_per_node * nr_nodes
 action_size = 5
 
-n_trials = 1
+n_trials = 10
 observation_radius = 10
 max_steps = int(3 * (env.height + env.width))
 eps = 1.
@@ -73,7 +73,7 @@ agent = Agent(state_size, action_size, "FC", 0)
 with path(torch_training.Nets, "avoid_checkpoint52800.pth") as file_in:
     agent.qnetwork_local.load_state_dict(torch.load(file_in))
 
-record_images = True
+record_images = False
 frame_step = 0
 
 for trials in range(1, n_trials + 1):
@@ -84,12 +84,7 @@ for trials in range(1, n_trials + 1):
     env_renderer.reset()
 
     for a in range(env.get_num_agents()):
-        data, distance, agent_data = split_tree(tree=np.array(obs[a]), num_features_per_node=num_features_per_node,
-                                                current_depth=0)
-        data = norm_obs_clip(data, fixed_radius=observation_radius)
-        distance = norm_obs_clip(distance)
-        agent_data = np.clip(agent_data, -1, 1)
-        agent_obs[a] = np.concatenate((np.concatenate((data, distance)), agent_data))
+        agent_obs[a] = normalize_observation(obs[a], observation_radius=10)
 
     # Run episode
     for step in range(max_steps):
@@ -108,13 +103,7 @@ for trials in range(1, n_trials + 1):
 
         next_obs, all_rewards, done, _ = env.step(action_dict)
         for a in range(env.get_num_agents()):
-            data, distance, agent_data = split_tree(tree=np.array(next_obs[a]),
-                                                    num_features_per_node=num_features_per_node,
-                                                    current_depth=0)
-            data = norm_obs_clip(data, fixed_radius=observation_radius)
-            distance = norm_obs_clip(distance)
-            agent_data = np.clip(agent_data, -1, 1)
-            agent_obs[a] = np.concatenate((np.concatenate((data, distance)), agent_data))
+            agent_obs[a] = agent_obs[a] = normalize_observation(next_obs[a], observation_radius=10)
 
         if done['__all__']:
             break

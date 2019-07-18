@@ -17,7 +17,7 @@ from importlib_resources import path
 # Import Torch and utility functions to normalize observation
 import torch_training.Nets
 from torch_training.dueling_double_dqn import Agent
-from utils.observation_utils import norm_obs_clip, split_tree
+from utils.observation_utils import normalize_observation
 
 
 def main(argv):
@@ -131,13 +131,7 @@ def main(argv):
 
         # Build agent specific observations
         for a in range(env.get_num_agents()):
-            data, distance, agent_data = split_tree(tree=np.array(obs[a]), num_features_per_node=num_features_per_node,
-                                                    current_depth=0)
-            data = norm_obs_clip(data, fixed_radius=observation_radius)
-            distance = norm_obs_clip(distance)
-            agent_data = np.clip(agent_data, -1, 1)
-            agent_obs[a] = np.concatenate((np.concatenate((data, distance)), agent_data))
-
+            agent_obs[a] = agent_obs[a] = normalize_observation(obs[a], observation_radius=10)
         score = 0
         env_done = 0
 
@@ -155,12 +149,7 @@ def main(argv):
 
             # Build agent specific observations and normalize
             for a in range(env.get_num_agents()):
-                data, distance, agent_data = split_tree(tree=np.array(next_obs[a]),
-                                                        num_features_per_node=num_features_per_node, current_depth=0)
-                data = norm_obs_clip(data, fixed_radius=observation_radius)
-                distance = norm_obs_clip(distance)
-                agent_data = np.clip(agent_data, -1, 1)
-                agent_next_obs[a] = np.concatenate((np.concatenate((data, distance)), agent_data))
+                agent_next_obs[a] = normalize_observation(next_obs[a], observation_radius=10)
 
             # Update replay buffer and train agent
             for a in range(env.get_num_agents()):
