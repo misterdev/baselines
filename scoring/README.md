@@ -53,9 +53,9 @@ observation_builder = TreeObsForRailEnv(max_depth=tree_depth, predictor=predicto
 The agent and the observation builder as well as an observation wrapper can be passed to the test function like this
 
 ```
-    test_score, test_dones, test_time = run_test(current_parameters, agent, observation_builder=your_observation_builder,
-                                                 observation_wrapper=your_observation_wrapper,
-                                                 test_nr=test_nr, nr_trials_per_test=10)
+test_score, test_dones, test_time = run_test(current_parameters, agent, observation_builder=your_observation_builder,
+                                             observation_wrapper=your_observation_wrapper,
+                                             test_nr=test_nr, nr_trials_per_test=10)
 ```
 
 In order to speed up the test time you can limit the number of trials per test (`nr_trials_per_test=10`). After you have made these changes to the file you can run `python score_tests.py` which will produce an output similiar to this:
