@@ -93,7 +93,7 @@ def main(argv):
 
     # Here you can pre-load an agent
     if True:
-        with path(torch_training.Nets, "avoid_checkpoint53700.pth") as file_in:
+        with path(torch_training.Nets, "avoid_checkpoint2400.pth") as file_in:
             agent.qnetwork_local.load_state_dict(torch.load(file_in))
 
     # Do training over n_episodes

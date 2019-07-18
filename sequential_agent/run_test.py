@@ -18,9 +18,9 @@ y_dim = env.height
 
 """
 
-x_dim = 10  # np.random.randint(8, 20)
-y_dim = 10  # np.random.randint(8, 20)
-n_agents = 5  # np.random.randint(3, 8)
+x_dim = 20  # np.random.randint(8, 20)
+y_dim = 20  # np.random.randint(8, 20)
+n_agents = 10  # np.random.randint(3, 8)
 n_goals = n_agents + np.random.randint(0, 3)
 min_dist = int(0.75 * min(x_dim, y_dim))
 
@@ -63,10 +63,10 @@ for trials in range(1, n_trials + 1):
         for a in range(env.get_num_agents()):
             if done[a]:
                 acting_agent += 1
-            if acting_agent == a:
-                action = agent.act(obs[acting_agent], eps=0)
+            if a == acting_agent:
+                action = agent.act(obs[a], eps=0)
             else:
-                action = 0
+                action = 4
             action_dict.update({a: action})
 
         # Environment step
