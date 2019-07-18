@@ -1,7 +1,9 @@
 # Local Submission Scoring
 
 The files in this repo are supposed to help you score your agents behavior locally.
+
 **WARNING**: This is not the actual submission scoring --> Results will differ from the scores you achieve here. But the scoring setup is very similar to this setup.
+
 **Beta Stage**: The scoring function here is still under development, use with caution.
 
 ## Introduction
