@@ -98,7 +98,6 @@ for trials in range(1, n_trials + 1):
         for a in range(env.get_num_agents()):
             action = agent.act(agent_obs[a], eps=0)
             action_dict.update({a: action})
-
         # Environment step
 
         next_obs, all_rewards, done, _ = env.step(action_dict)
