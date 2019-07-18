@@ -1,6 +1,8 @@
 This repository allows to run Rail Environment multi agent training with the RLLib Library.
 
 ## Installation:
+
+To run scripts of this repository, the deep learning library tensorflow should be installed, along with the following packages:
 ```sh
 pip install gym ray==0.7.0 gin-config opencv-python lz4 psutil
 ```
