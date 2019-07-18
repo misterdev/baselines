@@ -16,7 +16,7 @@ from utils.observation_utils import normalize_observation
 
 random.seed(3)
 np.random.seed(2)
-"""
+
 file_name = "./railway/complex_scene.pkl"
 env = RailEnv(width=10,
               height=20,
@@ -41,7 +41,7 @@ env = RailEnv(width=x_dim,
               obs_builder_object=TreeObsForRailEnv(max_depth=3, predictor=ShortestPathPredictorForRailEnv()),
               number_of_agents=n_agents)
 env.reset(True, True)
-
+"""
 tree_depth = 3
 observation_helper = TreeObsForRailEnv(max_depth=tree_depth, predictor=ShortestPathPredictorForRailEnv())
 env_renderer = RenderTool(env, gl="PILSVG", )
@@ -53,7 +53,7 @@ for i in range(tree_depth + 1):
 state_size = num_features_per_node * nr_nodes
 action_size = 5
 
-n_trials = 10
+n_trials = 1
 observation_radius = 10
 max_steps = int(3 * (env.height + env.width))
 eps = 1.
@@ -88,7 +88,7 @@ for trials in range(1, n_trials + 1):
 
     # Run episode
     for step in range(max_steps):
-        env_renderer.render_env(show=True, show_observations=False, show_predictions=False)
+        env_renderer.render_env(show=True, show_observations=False, show_predictions=True)
 
         if record_images:
             env_renderer.gl.save_image("./Images/Avoiding/flatland_frame_{:04d}.bmp".format(frame_step))
