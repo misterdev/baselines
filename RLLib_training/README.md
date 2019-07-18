@@ -5,6 +5,7 @@ This repository allows to run Rail Environment multi agent training with the RLL
 pip install gym
 pip install ray
 pip install gin-config
+pip install opencv-python
 ```
 
 To start a training with different parameters, you can create a folder containing a config.gin file (see example in `experiment_configs/config_example/config.gin`.
