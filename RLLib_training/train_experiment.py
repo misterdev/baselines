@@ -51,9 +51,9 @@ def on_episode_end(info):
     for k, v in episode._agent_reward_history.items():
         score += np.sum(v)
     score /= (len(episode._agent_reward_history) * episode.horizon)
-    done = 1
-    if len(episode._agent_reward_history) == episode.horizon:
-        done = 0
+    done = 0
+    if len(episode._agent_reward_history[0]) <= episode.horizon-5:
+        done = 1
     episode.custom_metrics["score"] = score
     episode.custom_metrics["proportion_episode_solved"] = done
 

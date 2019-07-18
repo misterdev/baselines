@@ -5,10 +5,10 @@ run_experiment.hidden_sizes = [32, 32]
 
 run_experiment.map_width = 20
 run_experiment.map_height = 20
-run_experiment.n_agents = 7#{"grid_search": [3, 4, 5, 6, 7, 8]}
+run_experiment.n_agents = {"grid_search": [3, 4, 5, 6, 7, 8]}
 run_experiment.rail_generator = "complex_rail_generator"
 run_experiment.nr_extra = 5
-run_experiment.policy_folder_name = "ppo_policy_two_obs_with_predictions_n_agents_{config[n_agents]}_"#_map_size_{config[map_width]}"
+run_experiment.policy_folder_name = "ppo_policy_two_obs_with_predictions_n_agents_{config[n_agents]}_map_size_{config[map_width]}_"
 
 run_experiment.seed = 123
 
