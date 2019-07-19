@@ -1,9 +1,10 @@
 This repository allows to run Rail Environment multi agent training with the RLLib Library.
 
 ## Installation:
+
+To run scripts of this repository, the deep learning library tensorflow should be installed, along with the following packages:
 ```sh
-pip install ray
-pip install gin-config
+pip install gym ray==0.7.0 gin-config opencv-python lz4 psutil
 ```
 
 To start a training with different parameters, you can create a folder containing a config.gin file (see example in `experiment_configs/config_example/config.gin`.
@@ -57,7 +58,7 @@ More documentation on how to use gin-config can be found on the github repositor
 ## Run an example:
 To start a training on a 20X20 map, with different numbers of agents initialized at each episode, on can run the train_experiment.py script:
 ```
-python baselines/RLLib_training/train_experiment.py
+python RLLib_training/train_experiment.py
 ```
 This will load the gin config file in the folder `experiment_configs/config_examples`.
 
