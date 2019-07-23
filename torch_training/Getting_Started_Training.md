@@ -105,7 +105,7 @@ We have no successfully set up the environment for training. To visualize it in 
 env_renderer = RenderTool(env, gl="PILSVG", )
 ```
 
-###Setting up the agent
+### Setting up the agent
 
 To set up a appropriate agent we need the state and action space sizes. From the discussion above about the tree observation we end up with:
 
