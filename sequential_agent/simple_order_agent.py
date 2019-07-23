@@ -18,7 +18,7 @@ class OrderedAgent:
         min_dist = min_lt(distance, 0)
         min_direction = np.where(distance == min_dist)
         if len(min_direction[0]) > 1:
-            return min_direction[0][0] + 1
+            return min_direction[0][-1] + 1
         return min_direction[0] + 1
 
     def step(self, memories):
