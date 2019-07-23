@@ -32,9 +32,7 @@ ray.init()  # object_store_memory=150000000000, redis_max_memory=30000000000)
 __file_dirname__ = os.path.dirname(os.path.realpath(__file__))
 
 CHECKPOINT_PATH = os.path.join(__file_dirname__, 'experiment_configs', 'config_example', 'ppo_policy_two_obs_with_predictions_n_agents_4_map_size_20q58l5_f7',
-                               'checkpoint_101', 'checkpoint-101')
-CHECKPOINT_PATH = '/home/guillaume/Desktop/distMAgent/ppo_policy_two_obs_with_predictions_n_agents_7_8e5zko1_/checkpoint_1301/checkpoint-1301'
-
+                               'checkpoint_101', 'checkpoint-101')  # To Modify
 N_EPISODES = 10
 N_STEPS_PER_EPISODE = 50
 
@@ -67,8 +65,7 @@ def render_training_result(config):
 
     # Dict with the different policies to train
     policy_graphs = {
-        config['policy_folder_name'].format(**locals()): (PolicyGraph, obs_space, act_space, {})
-        # "ppo_policy": (PolicyGraph, obs_space, act_space, {})
+        "ppo_policy": (PolicyGraph, obs_space, act_space, {})
     }
 
     def policy_mapping_fn(agent_id):
@@ -106,11 +103,10 @@ def render_training_result(config):
 
     trainer.restore(CHECKPOINT_PATH)
 
-    # policy = trainer.get_policy("ppo_policy")
-    policy = trainer.get_policy(config['policy_folder_name'].format(**locals()))
+    policy = trainer.get_policy("ppo_policy")
 
-    preprocessor = preprocessor(obs_space)
-    env_renderer = RenderTool(env, gl="PIL")
+    preprocessor = preprocessor(obs_space, {"step_memory": config["step_memory"]})
+    env_renderer = RenderTool(env, gl="PILSVG")
     for episode in range(N_EPISODES):
 
         observation = env.reset()
@@ -169,5 +165,5 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
 
 
 if __name__ == '__main__':
-    gin.parse_config_file(os.path.join(__file_dirname__, 'experiment_configs', 'config_example', 'config.gin'))
+    gin.parse_config_file(os.path.join(__file_dirname__, 'experiment_configs', 'config_example', 'config.gin'))  # To Modify
     run_experiment()

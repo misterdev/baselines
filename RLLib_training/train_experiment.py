@@ -47,13 +47,19 @@ def on_episode_start(info):
 
 def on_episode_end(info):
     episode = info['episode']
+
+    # Calculation of a custom score metric: cum of all accumulated rewards, divided by the number of agents
+    # and the number of the maximum time steps of the episode.
     score = 0
     for k, v in episode._agent_reward_history.items():
         score += np.sum(v)
     score /= (len(episode._agent_reward_history) * episode.horizon)
+    
+    # Calculation of the proportion of solved episodes before the maximum time step
     done = 0
     if len(episode._agent_reward_history[0]) <= episode.horizon-5:
         done = 1
+
     episode.custom_metrics["score"] = score
     episode.custom_metrics["proportion_episode_solved"] = done
 
@@ -62,6 +68,15 @@ def train(config, reporter):
     print('Init Env')
 
     set_seed(config['seed'], config['seed'], config['seed'])
+
+    # Given the depth of the tree observation and the number of features per node we get the following state_size
+    num_features_per_node = config['obs_builder'].observation_dim
+    tree_depth = 2
+    nr_nodes = 0
+    for i in range(tree_depth + 1):
+        nr_nodes += np.power(4, i)
+    obs_size = num_features_per_node * nr_nodes
+
 
     # Environment parameters
     env_config = {"width": config['map_width'],
@@ -76,7 +91,7 @@ def train(config, reporter):
 
     # Observation space and action space definitions
     if isinstance(config["obs_builder"], TreeObsForRailEnv):
-        obs_space = gym.spaces.Tuple((gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(168,)),) * 2)
+        obs_space = gym.spaces.Tuple((gym.spaces.Box(low=-float('inf'), high=float('inf'), shape=(obs_size,)),) * 2)
         preprocessor = "tree_obs_prep"
     else:
         raise ValueError("Undefined observation space") # Only TreeObservation implemented for now.
@@ -94,7 +109,8 @@ def train(config, reporter):
 
     # Trainer configuration
     trainer_config = DEFAULT_CONFIG.copy()
-    trainer_config['model'] = {"fcnet_hiddens": config['hidden_sizes'], "custom_preprocessor": preprocessor}
+    trainer_config['model'] = {"fcnet_hiddens": config['hidden_sizes'], "custom_preprocessor": preprocessor,
+            "custom_options": {"step_memory": config["step_memory"], "obs_size": obs_size}}
 
     trainer_config['multiagent'] = {"policy_graphs": policy_graphs,
                                     "policy_mapping_fn": policy_mapping_fn,
@@ -105,9 +121,9 @@ def train(config, reporter):
 
     # Parameters for calculation parallelization
     trainer_config["num_workers"] = 0
-    trainer_config["num_cpus_per_worker"] = 3
-    trainer_config["num_gpus"] = 0.0
-    trainer_config["num_gpus_per_worker"] = 0.0
+    trainer_config["num_cpus_per_worker"] = 8
+    trainer_config["num_gpus"] = 0.2
+    trainer_config["num_gpus_per_worker"] = 0.2
     trainer_config["num_cpus_for_driver"] = 1
     trainer_config["num_envs_per_worker"] = 1
 
@@ -125,6 +141,7 @@ def train(config, reporter):
             "on_episode_start": tune.function(on_episode_start),
             "on_episode_end": tune.function(on_episode_end)
         }
+
 
     def logger_creator(conf):
         """Creates a Unified logger with a default logdir prefix."""
@@ -174,11 +191,12 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
                 "kl_coeff": kl_coeff,
                 "lambda_gae": lambda_gae,
                 "min_dist": min_dist,
-                "step_memory": step_memory
+                "step_memory": step_memory  # If equal to two, the current observation plus
+                                            # the observation of last time step will be given as input the the model.
                 },
         resources_per_trial={
-            "cpu": 3,
-            "gpu": 0
+            "cpu": 8,
+            "gpu": 0.2
         },
         verbose=2,
         local_dir=local_dir
@@ -186,7 +204,7 @@ def run_experiment(name, num_iterations, n_agents, hidden_sizes, save_every,
 
 
 if __name__ == '__main__':
-    print(str(os.path.join(__file_dirname__, 'experiment_configs', 'config_example', 'config.gin')))
-    gin.parse_config_file(os.path.join(__file_dirname__, 'experiment_configs', 'config_example', 'config.gin'))
-    dir = os.path.join(__file_dirname__, 'experiment_configs', 'config_example')
+    folder_name = 'config_example'  # To Modify
+    gin.parse_config_file(os.path.join(__file_dirname__, 'experiment_configs', folder_name, 'config.gin'))
+    dir = os.path.join(__file_dirname__, 'experiment_configs', folder_name)
     run_experiment(local_dir=dir)

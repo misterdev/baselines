@@ -1,1 +1,4 @@
-torch==1.1.0
+git+https://gitlab.aicrowd.com/flatland/flatland.git@42-run-baselines-in-ci
+importlib-metadata>=0.17
+importlib_resources>=1.0.2
+torch>=1.1.0
