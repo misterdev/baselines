@@ -1,5 +1,5 @@
 import numpy as np
-from utils.observation_utils import split_tree, min_lt
+from utils.observation_utils import split_tree, min_gt
 
 
 class OrderedAgent:
@@ -15,7 +15,7 @@ class OrderedAgent:
         _, distance, _ = split_tree(tree=np.array(state), num_features_per_node=9,
                                     current_depth=0)
         distance = distance[1:]
-        min_dist = min_lt(distance, 0)
+        min_dist = min_gt(distance, 0)
         min_direction = np.where(distance == min_dist)
         if len(min_direction[0]) > 1:
             return min_direction[0][-1] + 1

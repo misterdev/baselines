@@ -15,7 +15,7 @@ def max_lt(seq, val):
     return max
 
 
-def min_lt(seq, val):
+def min_gt(seq, val):
     """
     Return smallest item in seq for which item > val applies.
     None is returned if seq was empty or all items in seq were >= val.
@@ -29,7 +29,7 @@ def min_lt(seq, val):
     return min
 
 
-def norm_obs_clip(obs, clip_min=-1, clip_max=1, fixed_radius=0):
+def norm_obs_clip(obs, clip_min=-1, clip_max=1, fixed_radius=0, normalize_to_range=False):
     """
     This function returns the difference between min and max value of an observation
     :param obs: Observation that should be normalized
@@ -42,13 +42,12 @@ def norm_obs_clip(obs, clip_min=-1, clip_max=1, fixed_radius=0):
     else:
         max_obs = max(1, max_lt(obs, 1000)) + 1
 
-    min_obs = 0  # min(max_obs, min_lt(obs, 0))
-
+    min_obs = 0  # min(max_obs, min_gt(obs, 0))
+    if normalize_to_range:
+        min_obs = min_gt(obs, 0)
     if max_obs == min_obs:
         return np.clip(np.array(obs) / max_obs, clip_min, clip_max)
     norm = np.abs(max_obs - min_obs)
-    if norm == 0:
-        norm = 1.
     return np.clip((np.array(obs) - min_obs) / norm, clip_min, clip_max)
 
 
@@ -103,7 +102,7 @@ def normalize_observation(observation, num_features_per_node=9, observation_radi
     data, distance, agent_data = split_tree(tree=np.array(observation), num_features_per_node=num_features_per_node,
                                             current_depth=0)
     data = norm_obs_clip(data, fixed_radius=observation_radius)
-    distance = norm_obs_clip(distance)
+    distance = norm_obs_clip(distance, normalize_to_range=True)
     agent_data = np.clip(agent_data, -1, 1)
     normalized_obs = np.concatenate((np.concatenate((data, distance)), agent_data))
     return normalized_obs

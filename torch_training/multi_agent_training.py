@@ -73,7 +73,7 @@ def main(argv):
         n_episodes = 60000
 
     # Set max number of steps per episode as well as other training relevant parameter
-    max_steps = int(3 * (env.height + env.width))
+    max_steps = int((env.height + env.width))
     eps = 1.
     eps_end = 0.005
     eps_decay = 0.9995
@@ -102,7 +102,7 @@ def main(argv):
         Training Curriculum: In order to get good generalization we change the number of agents
         and the size of the levels every 50 episodes.
         """
-        if episodes % 50 == 0:
+        if episodes % 50 == 1:
             x_dim = np.random.randint(8, 15)
             y_dim = np.random.randint(8, 15)
             n_agents = np.random.randint(3, 8)
@@ -117,7 +117,7 @@ def main(argv):
                           number_of_agents=n_agents)
 
             # Adjust the parameters according to the new env.
-            max_steps = int(3 * (env.height + env.width))
+            max_steps = int((env.height + env.width))
             agent_obs = [None] * env.get_num_agents()
             agent_next_obs = [None] * env.get_num_agents()
 
@@ -174,7 +174,11 @@ def main(argv):
         eps = max(eps_end, eps_decay * eps)  # decrease epsilon
 
         # Collection information about training
-        done_window.append(env_done)
+        tasks_finished = 0
+        for _idx in range(env.get_num_agents()):
+            if done[_idx] == 1:
+                tasks_finished += 1
+        done_window.append(tasks_finished / env.get_num_agents())
         scores_window.append(score / max_steps)  # save most recent score
         scores.append(np.mean(scores_window))
         dones_list.append((np.mean(done_window)))
