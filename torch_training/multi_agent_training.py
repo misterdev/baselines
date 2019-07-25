@@ -35,8 +35,8 @@ def main(argv):
     np.random.seed(1)
 
     # Initialize a random map with a random number of agents
-    x_dim = np.random.randint(8, 20)
-    y_dim = np.random.randint(8, 20)
+    x_dim = np.random.randint(8, 15)
+    y_dim = np.random.randint(8, 15)
     n_agents = np.random.randint(3, 8)
     n_goals = n_agents + np.random.randint(0, 3)
     min_dist = int(0.75 * min(x_dim, y_dim))
@@ -53,7 +53,7 @@ def main(argv):
 
     env = RailEnv(width=x_dim,
                   height=y_dim,
-                  rail_generator=complex_rail_generator(nr_start_goal=n_goals, nr_extra=5, min_dist=min_dist,
+                  rail_generator=complex_rail_generator(nr_start_goal=n_goals, nr_extra=2, min_dist=min_dist,
                                                         max_dist=99999,
                                                         seed=0),
                   obs_builder_object=observation_helper,
@@ -92,7 +92,7 @@ def main(argv):
     agent = Agent(state_size, action_size, "FC", 0)
 
     # Here you can pre-load an agent
-    if True:
+    if False:
         with path(torch_training.Nets, "avoid_checkpoint2400.pth") as file_in:
             agent.qnetwork_local.load_state_dict(torch.load(file_in))
 
@@ -103,14 +103,14 @@ def main(argv):
         and the size of the levels every 50 episodes.
         """
         if episodes % 50 == 0:
-            x_dim = np.random.randint(8, 20)
-            y_dim = np.random.randint(8, 20)
+            x_dim = np.random.randint(8, 15)
+            y_dim = np.random.randint(8, 15)
             n_agents = np.random.randint(3, 8)
             n_goals = n_agents + np.random.randint(0, 3)
             min_dist = int(0.75 * min(x_dim, y_dim))
             env = RailEnv(width=x_dim,
                           height=y_dim,
-                          rail_generator=complex_rail_generator(nr_start_goal=n_goals, nr_extra=5, min_dist=min_dist,
+                          rail_generator=complex_rail_generator(nr_start_goal=n_goals, nr_extra=2, min_dist=min_dist,
                                                                 max_dist=99999,
                                                                 seed=0),
                           obs_builder_object=observation_helper,
