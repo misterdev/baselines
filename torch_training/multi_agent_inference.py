@@ -4,8 +4,8 @@ from collections import deque
 import numpy as np
 import torch
 from flatland.envs.generators import rail_from_file, complex_rail_generator
-from flatland.envs.observations import TreeObsForRailEnv
-from flatland.envs.predictions import ShortestPathPredictorForRailEnv
+from observation_builders.observations import TreeObsForRailEnv
+from predictors.predictions import ShortestPathPredictorForRailEnv
 from flatland.envs.rail_env import RailEnv
 from flatland.utils.rendertools import RenderTool
 from importlib_resources import path
@@ -17,7 +17,7 @@ from utils.observation_utils import normalize_observation
 random.seed(3)
 np.random.seed(2)
 
-file_name = "./railway/testing_stuff.pkl"
+file_name = "./railway/simple_avoid.pkl"
 env = RailEnv(width=10,
               height=20,
               rail_generator=rail_from_file(file_name),
@@ -94,7 +94,7 @@ for trials in range(1, n_trials + 1):
         if record_images:
             env_renderer.gl.save_image("./Images/Avoiding/flatland_frame_{:04d}.bmp".format(frame_step))
             frame_step += 1
-        time.sleep(1.5)
+        # time.sleep(1.5)
         # Action
         for a in range(env.get_num_agents()):
             action = agent.act(agent_obs[a], eps=0)
