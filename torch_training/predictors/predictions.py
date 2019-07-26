@@ -8,7 +8,6 @@ from flatland.core.env_prediction_builder import PredictionBuilder
 from flatland.core.grid.grid4_utils import get_new_position
 from flatland.envs.rail_env import RailEnvActions
 
-
 class ShortestPathPredictorForRailEnv(PredictionBuilder):
     """
     ShortestPathPredictorForRailEnv object.
@@ -16,6 +15,9 @@ class ShortestPathPredictorForRailEnv(PredictionBuilder):
     This object returns shortest-path predictions for agents in the RailEnv environment.
     The prediction acts as if no other agent is in the environment and always takes the forward action.
     """
+
+    def __init__(self, max_depth):
+        self.max_depth = max_depth
 
     def get(self, custom_args=None, handle=None):
         """
@@ -54,6 +56,7 @@ class ShortestPathPredictorForRailEnv(PredictionBuilder):
             prediction = np.zeros(shape=(self.max_depth + 1, 5))
             prediction[0] = [0, *_agent_initial_position, _agent_initial_direction, 0]
             visited = set()
+
             for index in range(1, self.max_depth + 1):
                 # if we're at the target, stop moving...
                 if agent.position == agent.target:
@@ -100,4 +103,5 @@ class ShortestPathPredictorForRailEnv(PredictionBuilder):
             # cleanup: reset initial position
             agent.position = _agent_initial_position
             agent.direction = _agent_initial_direction
+
         return prediction_dict

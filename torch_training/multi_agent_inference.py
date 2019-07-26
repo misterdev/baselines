@@ -17,11 +17,14 @@ from utils.observation_utils import normalize_observation
 random.seed(3)
 np.random.seed(2)
 
+tree_depth = 3
+observation_helper = TreeObsForRailEnv(max_depth=tree_depth, predictor=ShortestPathPredictorForRailEnv(10))
+
 file_name = "./railway/simple_avoid.pkl"
 env = RailEnv(width=10,
               height=20,
               rail_generator=rail_from_file(file_name),
-              obs_builder_object=TreeObsForRailEnv(max_depth=3, predictor=ShortestPathPredictorForRailEnv()))
+              obs_builder_object=observation_helper)
 x_dim = env.width
 y_dim = env.height
 
@@ -38,13 +41,12 @@ env = RailEnv(width=x_dim,
               rail_generator=complex_rail_generator(nr_start_goal=n_goals, nr_extra=2, min_dist=min_dist,
                                                     max_dist=99999,
                                                     seed=0),
-              obs_builder_object=TreeObsForRailEnv(max_depth=3, predictor=ShortestPathPredictorForRailEnv()),
+              obs_builder_object=observation_helper,
               number_of_agents=n_agents)
 env.reset(True, True)
 
 """
-tree_depth = 3
-observation_helper = TreeObsForRailEnv(max_depth=tree_depth, predictor=ShortestPathPredictorForRailEnv())
+
 env_renderer = RenderTool(env, gl="PILSVG", )
 handle = env.get_agent_handles()
 num_features_per_node = env.obs_builder.observation_dim
