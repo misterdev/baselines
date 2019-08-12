@@ -59,6 +59,7 @@ For training purposes the tree is flattend into a single array.
 
 ## Training
 ### Setting up the environment
+Before you get started with the training make sure that you have [pytorch](https://pytorch.org/get-started/locally/) installed.
 Let us now train a simle double dueling DQN agent to navigate to its target on flatland. We start by importing flatland
 
 ```
