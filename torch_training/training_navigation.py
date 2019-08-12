@@ -118,7 +118,7 @@ def main(argv):
 
             # Only render when not triaing
             if not Training:
-                env_renderer.renderEnv(show=True, show_observations=True)
+                env_renderer.render_env(show=True, show_observations=True)
 
             # Chose the actions
             for a in range(env.get_num_agents()):
@@ -210,7 +210,7 @@ def main(argv):
 
     # Run episode
     for step in range(max_steps):
-        env_renderer.renderEnv(show=True, show_observations=False)
+        env_renderer.render_env(show=True, show_observations=False)
 
         # Chose the actions
         for a in range(env.get_num_agents()):

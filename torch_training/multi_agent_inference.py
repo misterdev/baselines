@@ -3,13 +3,13 @@ from collections import deque
 
 import numpy as np
 import torch
-from flatland.envs.generators import rail_from_file, complex_rail_generator
-from observation_builders.observations import TreeObsForRailEnv
-from predictors.predictions import ShortestPathPredictorForRailEnv
+from flatland.envs.generators import rail_from_file
 from flatland.envs.rail_env import RailEnv
 from flatland.utils.rendertools import RenderTool
 from importlib_resources import path
-import time
+from observation_builders.observations import TreeObsForRailEnv
+from predictors.predictions import ShortestPathPredictorForRailEnv
+
 import torch_training.Nets
 from torch_training.dueling_double_dqn import Agent
 from utils.observation_utils import normalize_observation
@@ -73,7 +73,7 @@ action_prob = [0] * action_size
 agent_obs = [None] * env.get_num_agents()
 agent_next_obs = [None] * env.get_num_agents()
 agent = Agent(state_size, action_size, "FC", 0)
-with path(torch_training.Nets, "avoid_checkpoint59900.pth") as file_in:
+with path(torch_training.Nets, "avoid_checkpoint60000.pth") as file_in:
     agent.qnetwork_local.load_state_dict(torch.load(file_in))
 
 record_images = False
