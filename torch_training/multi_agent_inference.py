@@ -8,8 +8,8 @@ from observation_builders.observations import TreeObsForRailEnv
 from predictors.predictions import ShortestPathPredictorForRailEnv
 
 import torch_training.Nets
-from flatland.envs.generators import rail_from_file
 from flatland.envs.rail_env import RailEnv
+from flatland.envs.rail_generators import rail_from_file
 from flatland.utils.rendertools import RenderTool
 from torch_training.dueling_double_dqn import Agent
 from utils.observation_utils import normalize_observation

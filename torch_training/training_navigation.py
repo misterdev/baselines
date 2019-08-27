@@ -8,10 +8,10 @@ import numpy as np
 import torch
 from dueling_double_dqn import Agent
 
-from flatland.envs.agent_generators import complex_rail_generator_agents_placer
-from flatland.envs.generators import complex_rail_generator
 from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.rail_env import RailEnv
+from flatland.envs.rail_generators import complex_rail_generator
+from flatland.envs.schedule_generators import complex_rail_generator_agents_placer
 from flatland.utils.rendertools import RenderTool
 from utils.observation_utils import norm_obs_clip, split_tree
 

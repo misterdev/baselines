@@ -11,12 +11,12 @@ from importlib_resources import path
 
 # Import Torch and utility functions to normalize observation
 import torch_training.Nets
-# Import Flatland/ Observations and Predictors
-from flatland.envs.agent_generators import complex_rail_generator_agents_placer
-from flatland.envs.generators import complex_rail_generator
 from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.predictions import ShortestPathPredictorForRailEnv
 from flatland.envs.rail_env import RailEnv
+from flatland.envs.rail_generators import complex_rail_generator
+# Import Flatland/ Observations and Predictors
+from flatland.envs.schedule_generators import complex_rail_generator_agents_placer
 from torch_training.dueling_double_dqn import Agent
 from utils.observation_utils import normalize_observation
 

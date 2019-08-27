@@ -3,11 +3,11 @@ import time
 
 import numpy as np
 
-from flatland.envs.agent_generators import complex_rail_generator_agents_placer
-from flatland.envs.generators import complex_rail_generator, rail_from_file
 from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.predictions import ShortestPathPredictorForRailEnv
 from flatland.envs.rail_env import RailEnv
+from flatland.envs.rail_generators import complex_rail_generator, rail_from_file
+from flatland.envs.schedule_generators import complex_rail_generator_agents_placer
 from flatland.utils.rendertools import RenderTool
 
 # Time factor to test the max time allowed for an env.
