@@ -1,10 +1,12 @@
-from sequential_agent.simple_order_agent import OrderedAgent
-from flatland.envs.generators import rail_from_file, complex_rail_generator
+import numpy as np
+
+from flatland.envs.agent_generators import complex_rail_generator_agents_placer
+from flatland.envs.generators import complex_rail_generator
 from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.predictions import ShortestPathPredictorForRailEnv
 from flatland.envs.rail_env import RailEnv
 from flatland.utils.rendertools import RenderTool
-import numpy as np
+from sequential_agent.simple_order_agent import OrderedAgent
 
 np.random.seed(2)
 """
@@ -29,6 +31,7 @@ env = RailEnv(width=x_dim,
               rail_generator=complex_rail_generator(nr_start_goal=n_goals, nr_extra=5, min_dist=min_dist,
                                                     max_dist=99999,
                                                     seed=0),
+              agent_generator=complex_rail_generator_agents_placer(),
               obs_builder_object=TreeObsForRailEnv(max_depth=1, predictor=ShortestPathPredictorForRailEnv()),
               number_of_agents=n_agents)
 env.reset(True, True)

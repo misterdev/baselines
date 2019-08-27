@@ -3,14 +3,14 @@ from collections import deque
 
 import numpy as np
 import torch
-from flatland.envs.generators import rail_from_file
-from flatland.envs.rail_env import RailEnv
-from flatland.utils.rendertools import RenderTool
 from importlib_resources import path
 from observation_builders.observations import TreeObsForRailEnv
 from predictors.predictions import ShortestPathPredictorForRailEnv
 
 import torch_training.Nets
+from flatland.envs.generators import rail_from_file
+from flatland.envs.rail_env import RailEnv
+from flatland.utils.rendertools import RenderTool
 from torch_training.dueling_double_dqn import Agent
 from utils.observation_utils import normalize_observation
 
@@ -41,6 +41,7 @@ env = RailEnv(width=x_dim,
               rail_generator=complex_rail_generator(nr_start_goal=n_goals, nr_extra=2, min_dist=min_dist,
                                                     max_dist=99999,
                                                     seed=0),
+              agent_generator=complex_rail_generator_agents_placer(),
               obs_builder_object=observation_helper,
               number_of_agents=n_agents)
 env.reset(True, True)

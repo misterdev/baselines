@@ -3,15 +3,16 @@ import time
 from collections import deque
 
 import numpy as np
+from line_profiler import LineProfiler
+
+from flatland.envs.agent_generators import complex_rail_generator_agents_placer
 from flatland.envs.generators import complex_rail_generator
 from flatland.envs.observations import GlobalObsForRailEnv
 from flatland.envs.rail_env import RailEnv
-from line_profiler import LineProfiler
-
 from utils.observation_utils import norm_obs_clip, split_tree
 
 
-def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '*'):
+def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='*'):
     """
     Call in a loop to create terminal progress bar
     @params:
@@ -31,13 +32,14 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     if iteration == total:
         print('')
 
+
 class RandomAgent:
 
     def __init__(self, state_size, action_size):
         self.state_size = state_size
         self.action_size = action_size
 
-    def act(self, state, eps = 0):
+    def act(self, state, eps=0):
         """
         :param state: input is the observation of the agent
         :return: returns an action
@@ -87,6 +89,7 @@ def run_test(parameters, agent, test_nr=0, tree_depth=3):
                   rail_generator=complex_rail_generator(nr_start_goal=nr_paths, nr_extra=5, min_dist=min_dist,
                                                         max_dist=99999,
                                                         seed=parameters[3]),
+                  agent_generator=complex_rail_generator_agents_placer(),
                   obs_builder_object=GlobalObsForRailEnv(),
                   number_of_agents=parameters[2])
     max_steps = int(3 * (env.height + env.width))
