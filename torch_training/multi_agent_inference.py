@@ -41,7 +41,7 @@ env = RailEnv(width=x_dim,
               rail_generator=complex_rail_generator(nr_start_goal=n_goals, nr_extra=2, min_dist=min_dist,
                                                     max_dist=99999,
                                                     seed=0),
-              agent_generator=complex_rail_generator_agents_placer(),
+              schedule_generator=complex_schedule_generator(),
               obs_builder_object=observation_helper,
               number_of_agents=n_agents)
 env.reset(True, True)

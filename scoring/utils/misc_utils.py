@@ -7,7 +7,7 @@ from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.predictions import ShortestPathPredictorForRailEnv
 from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_generators import complex_rail_generator, rail_from_file
-from flatland.envs.schedule_generators import complex_rail_generator_agents_placer
+from flatland.envs.schedule_generators import complex_schedule_generator
 from flatland.utils.rendertools import RenderTool
 
 # Time factor to test the max time allowed for an env.
@@ -113,7 +113,7 @@ def create_testfiles(parameters, test_nr=0, nr_trials_per_test=100):
                   rail_generator=complex_rail_generator(nr_start_goal=nr_paths, nr_extra=5, min_dist=min_dist,
                                                         max_dist=99999,
                                                         seed=parameters[3]),
-                  agent_generator=complex_rail_generator_agents_placer(),
+                  schedule_generator=complex_schedule_generator(),
                   obs_builder_object=TreeObsForRailEnv(max_depth=2),
                   number_of_agents=parameters[2])
     printProgressBar(0, nr_trials_per_test, prefix='Progress:', suffix='Complete', length=20)

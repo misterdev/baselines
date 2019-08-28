@@ -8,7 +8,7 @@ from line_profiler import LineProfiler
 from flatland.envs.observations import GlobalObsForRailEnv
 from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_generators import complex_rail_generator
-from flatland.envs.schedule_generators import complex_rail_generator_agents_placer
+from flatland.envs.schedule_generators import complex_schedule_generator
 from utils.observation_utils import norm_obs_clip, split_tree
 
 
@@ -89,7 +89,7 @@ def run_test(parameters, agent, test_nr=0, tree_depth=3):
                   rail_generator=complex_rail_generator(nr_start_goal=nr_paths, nr_extra=5, min_dist=min_dist,
                                                         max_dist=99999,
                                                         seed=parameters[3]),
-                  agent_generator=complex_rail_generator_agents_placer(),
+                  schedule_generator=complex_schedule_generator(),
                   obs_builder_object=GlobalObsForRailEnv(),
                   number_of_agents=parameters[2])
     max_steps = int(3 * (env.height + env.width))

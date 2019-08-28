@@ -16,7 +16,7 @@ from flatland.envs.predictions import ShortestPathPredictorForRailEnv
 from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_generators import complex_rail_generator
 # Import Flatland/ Observations and Predictors
-from flatland.envs.schedule_generators import complex_rail_generator_agents_placer
+from flatland.envs.schedule_generators import complex_schedule_generator
 from torch_training.dueling_double_dqn import Agent
 from utils.observation_utils import normalize_observation
 
@@ -57,7 +57,7 @@ def main(argv):
                   rail_generator=complex_rail_generator(nr_start_goal=n_goals, nr_extra=2, min_dist=min_dist,
                                                         max_dist=99999,
                                                         seed=0),
-                  agent_generator=complex_rail_generator_agents_placer(),
+                  schedule_generator=complex_schedule_generator(),
                   obs_builder_object=observation_helper,
                   number_of_agents=n_agents)
     env.reset(True, True)
@@ -115,9 +115,9 @@ def main(argv):
                           rail_generator=complex_rail_generator(nr_start_goal=n_goals, nr_extra=2, min_dist=min_dist,
                                                                 max_dist=99999,
                                                                 seed=0),
-                          agent_generator=complex_rail_generator_agents_placer(),
+                          schedule_generator=complex_schedule_generator(),
                           obs_builder_object=observation_helper,
-                          number_of_agents=n_agents)
+                          number_of_agents=n_agents)f
 
             # Adjust the parameters according to the new env.
             max_steps = int((env.height + env.width))
