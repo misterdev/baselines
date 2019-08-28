@@ -117,7 +117,7 @@ def main(argv):
                                                                 seed=0),
                           schedule_generator=complex_schedule_generator(),
                           obs_builder_object=observation_helper,
-                          number_of_agents=n_agents)f
+                          number_of_agents=n_agents)
 
             # Adjust the parameters according to the new env.
             max_steps = int((env.height + env.width))
