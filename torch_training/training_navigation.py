@@ -7,11 +7,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from dueling_double_dqn import Agent
-from flatland.envs.generators import complex_rail_generator
+
 from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.rail_env import RailEnv
+from flatland.envs.rail_generators import complex_rail_generator
+from flatland.envs.schedule_generators import complex_schedule_generator
 from flatland.utils.rendertools import RenderTool
-
 from utils.observation_utils import norm_obs_clip, split_tree
 
 
@@ -44,6 +45,7 @@ def main(argv):
                   rail_generator=complex_rail_generator(nr_start_goal=n_goals, nr_extra=5, min_dist=min_dist,
                                                         max_dist=99999,
                                                         seed=0),
+                  schedule_generator=complex_schedule_generator(),
                   obs_builder_object=observation_builder,
                   number_of_agents=n_agents)
     env.reset(True, True)

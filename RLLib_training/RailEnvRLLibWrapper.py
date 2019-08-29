@@ -2,8 +2,9 @@ import numpy as np
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 from ray.rllib.utils.seed import seed as set_seed
 
-from flatland.envs.generators import complex_rail_generator, random_rail_generator
 from flatland.envs.rail_env import RailEnv
+from flatland.envs.rail_generators import complex_rail_generator, random_rail_generator
+from flatland.envs.schedule_generators import complex_schedule_generator, random_schedule_generator
 
 
 class RailEnvRLLibWrapper(MultiAgentEnv):
@@ -25,19 +26,25 @@ class RailEnvRLLibWrapper(MultiAgentEnv):
                                                          min_dist=config['min_dist'],
                                                          nr_extra=config['nr_extra'],
                                                          seed=config['seed'] * (1 + vector_index))
+            self.schedule_generator = complex_schedule_generator()
 
         elif config['rail_generator'] == "random_rail_generator":
             self.rail_generator = random_rail_generator()
+            self.schedule_generator = random_schedule_generator()
         elif config['rail_generator'] == "load_env":
             self.predefined_env = True
             self.rail_generator = random_rail_generator()
+            self.schedule_generator = random_schedule_generator()
         else:
             raise (ValueError, f'Unknown rail generator: {config["rail_generator"]}')
 
         set_seed(config['seed'] * (1 + vector_index))
         self.env = RailEnv(width=config["width"], height=config["height"],
                            number_of_agents=config["number_of_agents"],
-                           obs_builder_object=config['obs_builder'], rail_generator=self.rail_generator)
+                           obs_builder_object=config['obs_builder'],
+                           rail_generator=self.rail_generator,
+                           schedule_generator=self.schedule_generator
+                           )
 
         if self.predefined_env:
             self.env.load_resource('torch_training.railway', 'complex_scene.pkl')

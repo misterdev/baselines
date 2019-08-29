@@ -1,18 +1,18 @@
 import random
 import time
-from collections import deque
 
 import numpy as np
-from flatland.envs.generators import complex_rail_generator, rail_from_file
-from flatland.envs.observations import GlobalObsForRailEnv, TreeObsForRailEnv
-from flatland.envs.predictions import ShortestPathPredictorForRailEnv
-from flatland.utils.rendertools import RenderTool
-from flatland.envs.rail_env import RailEnv
 
-from utils.observation_utils import norm_obs_clip, split_tree, max_lt
+from flatland.envs.observations import TreeObsForRailEnv
+from flatland.envs.predictions import ShortestPathPredictorForRailEnv
+from flatland.envs.rail_env import RailEnv
+from flatland.envs.rail_generators import complex_rail_generator, rail_from_file
+from flatland.envs.schedule_generators import complex_schedule_generator
+from flatland.utils.rendertools import RenderTool
 
 # Time factor to test the max time allowed for an env.
 max_time_factor = 1
+
 
 def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='*'):
     """
@@ -54,7 +54,6 @@ def run_test(parameters, agent, observation_builder=None, observation_wrapper=No
     random.seed(parameters[3])
     np.random.seed(parameters[3])
 
-
     printProgressBar(0, nr_trials_per_test, prefix='Progress:', suffix='Complete', length=20)
     for trial in range(nr_trials_per_test):
         # Reset the env
@@ -72,7 +71,6 @@ def run_test(parameters, agent, observation_builder=None, observation_wrapper=No
         if observation_wrapper is not None:
             for a in range(env.get_num_agents()):
                 obs[a] = observation_wrapper(obs[a])
-
 
         # Run episode
         trial_score = 0
@@ -115,6 +113,7 @@ def create_testfiles(parameters, test_nr=0, nr_trials_per_test=100):
                   rail_generator=complex_rail_generator(nr_start_goal=nr_paths, nr_extra=5, min_dist=min_dist,
                                                         max_dist=99999,
                                                         seed=parameters[3]),
+                  schedule_generator=complex_schedule_generator(),
                   obs_builder_object=TreeObsForRailEnv(max_depth=2),
                   number_of_agents=parameters[2])
     printProgressBar(0, nr_trials_per_test, prefix='Progress:', suffix='Complete', length=20)
@@ -151,6 +150,7 @@ def render_test(parameters, test_nr=0, nr_examples=5):
         env_renderer.close_window()
     return
 
+
 def run_test_sequential(parameters, agent, test_nr=0, tree_depth=3):
     # Parameter initialization
     features_per_node = 9
@@ -168,7 +168,6 @@ def run_test_sequential(parameters, agent, test_nr=0, tree_depth=3):
     random.seed(parameters[3])
     np.random.seed(parameters[3])
 
-
     printProgressBar(0, nr_trials_per_test, prefix='Progress:', suffix='Complete', length=20)
     for trial in range(nr_trials_per_test):
         # Reset the env
@@ -177,7 +176,8 @@ def run_test_sequential(parameters, agent, test_nr=0, tree_depth=3):
         env = RailEnv(width=3,
                       height=3,
                       rail_generator=rail_from_file(file_name),
-                      obs_builder_object=TreeObsForRailEnv(max_depth=tree_depth, predictor=ShortestPathPredictorForRailEnv()),
+                      obs_builder_object=TreeObsForRailEnv(max_depth=tree_depth,
+                                                           predictor=ShortestPathPredictorForRailEnv()),
                       number_of_agents=1,
                       )
 
@@ -185,7 +185,7 @@ def run_test_sequential(parameters, agent, test_nr=0, tree_depth=3):
         done = env.dones
         # Run episode
         trial_score = 0
-        max_steps = int(max_time_factor* (env.height + env.width))
+        max_steps = int(max_time_factor * (env.height + env.width))
         for step in range(max_steps):
 
             # Action
