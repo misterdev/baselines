@@ -45,6 +45,8 @@ def norm_obs_clip(obs, clip_min=-1, clip_max=1, fixed_radius=0, normalize_to_ran
     min_obs = 0  # min(max_obs, min_gt(obs, 0))
     if normalize_to_range:
         min_obs = min_gt(obs, 0)
+    if min_obs > max_obs:
+        min_obs = max_obs
     if max_obs == min_obs:
         return np.clip(np.array(obs) / max_obs, clip_min, clip_max)
     norm = np.abs(max_obs - min_obs)
