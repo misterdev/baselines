@@ -36,9 +36,6 @@ def main(argv):
     n_goals = 5
     min_dist = 5
 
-    # We are training an Agent using the Tree Observation with depth 2
-    observation_builder = TreeObsForRailEnv(max_depth=2)
-
     # Use a the malfunction generator to break agents from time to time
     stochastic_data = {'prop_malfunction': 0.1,  # Percentage of defective agents
                        'malfunction_rate': 30,  # Rate of malfunction occurence
