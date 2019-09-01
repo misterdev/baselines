@@ -47,8 +47,8 @@ def main(argv):
     TreeObservation = TreeObsForRailEnv(max_depth=2)
 
     # Different agent types (trains) with different speeds.
-    speed_ration_map = {1.: 1.,  # Fast passenger train
-                        1. / 2.: 0.0,  # Fast freight train
+    speed_ration_map = {1.: 0.,  # Fast passenger train
+                        1. / 2.: 1.0,  # Fast freight train
                         1. / 3.: 0.0,  # Slow commuter train
                         1. / 4.: 0.0}  # Slow freight train
 
@@ -153,9 +153,9 @@ def main(argv):
             # Update replay buffer and train agent
             for a in range(env.get_num_agents()):
                 if done[a]:
-                    final_obs[a] = agent_obs[a].copy()
+                    final_obs[a] = agent_obs_buffer[a]
                     final_obs_next[a] = agent_next_obs[a].copy()
-                    final_action_dict.update({a: action_dict[a]})
+                    final_action_dict.update({a: agent_action_buffer[a]})
                 if not done[a]:
                     if agent_obs_buffer[a] is not None and register_action_state[a]:
                         agent_delayed_next = agent_obs[a].copy()
