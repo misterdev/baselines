@@ -13,7 +13,7 @@ from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_generators import sparse_rail_generator
 from flatland.envs.schedule_generators import sparse_schedule_generator
 from flatland.utils.rendertools import RenderTool
-from utils.observation_utils import norm_obs_clip, split_tree
+from utils.observation_utils import normalize_observation
 
 
 def main(argv):
@@ -120,74 +120,63 @@ def main(argv):
 
         # Reset environment
         obs = env.reset(True, True)
-        if not Training:
-            env_renderer.set_new_rail()
 
-        # Split the observation tree into its parts and normalize the observation using the utility functions.
-        # Build agent specific local observation
+        final_obs = agent_obs.copy()
+        final_obs_next = agent_next_obs.copy()
+
+        # Build agent specific observations
         for a in range(env.get_num_agents()):
-            rail_data, distance_data, agent_data = split_tree(tree=np.array(obs[a]),
-                                                              num_features_per_node=num_features_per_node,
-                                                              current_depth=0)
-            rail_data = norm_obs_clip(rail_data)
-            distance_data = norm_obs_clip(distance_data)
-            agent_data = np.clip(agent_data, -1, 1)
-            agent_obs[a] = np.concatenate((np.concatenate((rail_data, distance_data)), agent_data))
+            agent_obs[a] = agent_obs[a] = normalize_observation(obs[a], observation_radius=10)
 
         # Reset score and done
         score = 0
         env_done = 0
 
+
         # Run episode
         for step in range(max_steps):
 
-            # Only render when not triaing
-            if not Training:
-                env_renderer.render_env(show=True, show_observations=True)
-
-            # Chose the actions
+            # Action
             for a in range(env.get_num_agents()):
-                if not Training:
-                    eps = 0
-
                 action = agent.act(agent_obs[a], eps=eps)
-                action_dict.update({a: action})
-
-                # Count number of actions takes for statistics
                 action_prob[action] += 1
+                action_dict.update({a: action})
 
             # Environment step
             next_obs, all_rewards, done, _ = env.step(action_dict)
 
+            # Build agent specific observations and normalize
             for a in range(env.get_num_agents()):
-                rail_data, distance_data, agent_data = split_tree(tree=np.array(next_obs[a]),
-                                                                  num_features_per_node=num_features_per_node,
-                                                                  current_depth=0)
-                rail_data = norm_obs_clip(rail_data)
-                distance_data = norm_obs_clip(distance_data)
-                agent_data = np.clip(agent_data, -1, 1)
-                agent_next_obs[a] = np.concatenate((np.concatenate((rail_data, distance_data)), agent_data))
+                agent_next_obs[a] = normalize_observation(next_obs[a], observation_radius=10)
 
             # Update replay buffer and train agent
             for a in range(env.get_num_agents()):
-
-                # Remember and train agent
-                if Training:
+                if done[a]:
+                    final_obs[a] = agent_obs[a].copy()
+                    final_obs_next[a] = agent_next_obs[a].copy()
+                    final_action_dict.update({a: action_dict[a]})
+                if not done[a]:
                     agent.step(agent_obs[a], action_dict[a], all_rewards[a], agent_next_obs[a], done[a])
-
-                # Update the current score
                 score += all_rewards[a] / env.get_num_agents()
 
+            # Copy observation
             agent_obs = agent_next_obs.copy()
+
             if done['__all__']:
                 env_done = 1
+                for a in range(env.get_num_agents()):
+                    agent.step(final_obs[a], final_action_dict[a], all_rewards[a], final_obs_next[a], done[a])
                 break
 
         # Epsilon decay
         eps = max(eps_end, eps_decay * eps)  # decrease epsilon
 
-        # Store the information about training progress
-        done_window.append(env_done)
+        # Collection information about training
+        tasks_finished = 0
+        for _idx in range(env.get_num_agents()):
+            if done[_idx] == 1:
+                tasks_finished += 1
+        done_window.append(tasks_finished / env.get_num_agents())
         scores_window.append(score / max_steps)  # save most recent score
         scores.append(np.mean(scores_window))
         dones_list.append((np.mean(done_window)))
