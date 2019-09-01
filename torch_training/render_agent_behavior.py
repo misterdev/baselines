@@ -38,7 +38,7 @@ min_dist = 5
 observation_builder = TreeObsForRailEnv(max_depth=2)
 
 # Use a the malfunction generator to break agents from time to time
-stochastic_data = {'prop_malfunction': 0.1,  # Percentage of defective agents
+stochastic_data = {'prop_malfunction': 0.0,  # Percentage of defective agents
                    'malfunction_rate': 30,  # Rate of malfunction occurence
                    'min_duration': 3,  # Minimal duration of malfunction
                    'max_duration': 20  # Max duration of malfunction
@@ -48,10 +48,10 @@ stochastic_data = {'prop_malfunction': 0.1,  # Percentage of defective agents
 TreeObservation = TreeObsForRailEnv(max_depth=2)
 
 # Different agent types (trains) with different speeds.
-speed_ration_map = {1.: 0.25,  # Fast passenger train
-                    1. / 2.: 0.25,  # Fast freight train
-                    1. / 3.: 0.25,  # Slow commuter train
-                    1. / 4.: 0.25}  # Slow freight train
+speed_ration_map = {1.: 1.,  # Fast passenger train
+                    1. / 2.: 0.0,  # Fast freight train
+                    1. / 3.: 0.0,  # Slow commuter train
+                    1. / 4.: 0.0}  # Slow freight train
 
 env = RailEnv(width=x_dim,
               height=y_dim,
@@ -103,7 +103,7 @@ action_prob = [0] * action_size
 agent_obs = [None] * env.get_num_agents()
 agent_next_obs = [None] * env.get_num_agents()
 agent = Agent(state_size, action_size, "FC", 0)
-with path(torch_training.Nets, "navigator_checkpoint100.pth") as file_in:
+with path(torch_training.Nets, "navigator_checkpoint1200.pth") as file_in:
     agent.qnetwork_local.load_state_dict(torch.load(file_in))
 
 record_images = False
