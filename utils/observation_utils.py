@@ -97,11 +97,12 @@ def split_tree(tree, num_features_per_node, current_depth=0):
             agent_data.extend(tmp_agent_data)
     return tree_data, distance_data, agent_data
 
-def normalize_observation(observation, num_features_per_node=9, observation_radius=0):
+
+def normalize_observation(observation, num_features_per_node=11, observation_radius=0):
     data, distance, agent_data = split_tree(tree=np.array(observation), num_features_per_node=num_features_per_node,
                                             current_depth=0)
     data = norm_obs_clip(data, fixed_radius=observation_radius)
     distance = norm_obs_clip(distance, normalize_to_range=True)
-    agent_data = np.clip(agent_data, -1, 1)
+    agent_data = np.clip(agent_data, -1, 20)
     normalized_obs = np.concatenate((np.concatenate((data, distance)), agent_data))
     return normalized_obs
