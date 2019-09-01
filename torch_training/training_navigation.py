@@ -163,7 +163,7 @@ def main(argv):
                 if not done[a]:
                     if agent_obs_buffer[a] is not None and register_action_state[a]:
                         agent_delayed_next = agent_obs[a].copy()
-                        agent.step(agent_obs_buffer[a], agent_action_buffer[a], cummulated_reward[a],
+                        agent.step(agent_obs_buffer[a], agent_action_buffer[a], all_rewards[a],
                                    agent_delayed_next, done[a])
                         cummulated_reward[a] = 0.
                     if register_action_state[a]:
