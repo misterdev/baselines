@@ -46,7 +46,7 @@ def main(argv):
     # Parameters for the Environment
     x_dim = 20
     y_dim = 20
-    n_agents = 5
+    n_agents = 3
     tree_depth = 2
 
     # Use a the malfunction generator to break agents from time to time
@@ -163,6 +163,7 @@ def main(argv):
         # different times during an episode
         final_obs = agent_obs.copy()
         final_obs_next = agent_next_obs.copy()
+        register_action_state = np.zeros(env.get_num_agents(), dtype=bool)
 
         # Build agent specific observations
         for a in range(env.get_num_agents()):

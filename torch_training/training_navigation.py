@@ -87,7 +87,7 @@ def main(argv):
 
     # We set the number of episodes we would like to train on
     if 'n_trials' not in locals():
-        n_trials = 6000
+        n_trials = 15000
 
     # And the max number of steps we want to take per episode
     max_steps = int(3 * (env.height + env.width))
@@ -107,6 +107,9 @@ def main(argv):
     action_prob = [0] * action_size
     agent_obs = [None] * env.get_num_agents()
     agent_next_obs = [None] * env.get_num_agents()
+    agent_obs_buffer = [None] * env.get_num_agents()
+    agent_action_buffer = [None] * env.get_num_agents()
+    cummulated_reward = np.zeros(env.get_num_agents())
 
     # Now we load a Double dueling DQN agent
     agent = Agent(state_size, action_size, "FC", 0)
@@ -146,15 +149,23 @@ def main(argv):
             # Build agent specific observations and normalize
             for a in range(env.get_num_agents()):
                 agent_next_obs[a] = normalize_observation(next_obs[a], observation_radius=10)
-
+                cummulated_reward[a] += all_rewards[a]
             # Update replay buffer and train agent
             for a in range(env.get_num_agents()):
                 if done[a]:
                     final_obs[a] = agent_obs[a].copy()
                     final_obs_next[a] = agent_next_obs[a].copy()
                     final_action_dict.update({a: action_dict[a]})
-                if not done[a] and register_action_state[a]:
-                    agent.step(agent_obs[a], action_dict[a], all_rewards[a], agent_next_obs[a], done[a])
+                if not done[a]:
+                    if agent_obs_buffer[a] is not None and register_action_state[a]:
+                        agent_delayed_next = agent_obs[a].copy()
+                        agent.step(agent_obs_buffer[a], agent_action_buffer[a], cummulated_reward[a],
+                                   agent_delayed_next, done[a])
+                        cummulated_reward[a] = 0.
+                    if register_action_state[a]:
+                        agent_obs_buffer[a] = agent_obs[a].copy()
+                        agent_action_buffer[a] = action_dict[a]
+
                 score += all_rewards[a] / env.get_num_agents()
 
             # Copy observation
