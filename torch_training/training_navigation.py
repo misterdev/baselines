@@ -71,11 +71,9 @@ def main(argv):
                   number_of_agents=n_agents,
                   stochastic_data=stochastic_data,  # Malfunction data generator
                   obs_builder_object=TreeObservation)
-    env.reset(True, True)
 
     # After training we want to render the results so we also load a renderer
     env_renderer = RenderTool(env, gl="PILSVG", )
-
     # Given the depth of the tree observation and the number of features per node we get the following state_size
     num_features_per_node = env.obs_builder.observation_dim
     tree_depth = 2
@@ -104,7 +102,6 @@ def main(argv):
     final_action_dict = dict()
     scores_window = deque(maxlen=100)
     done_window = deque(maxlen=100)
-    time_obs = deque(maxlen=2)
     scores = []
     dones_list = []
     action_prob = [0] * action_size
@@ -113,8 +110,6 @@ def main(argv):
 
     # Now we load a Double dueling DQN agent
     agent = Agent(state_size, action_size, "FC", 0)
-
-    Training = True
 
     for trials in range(1, n_trials + 1):
 
@@ -126,19 +121,17 @@ def main(argv):
 
         # Build agent specific observations
         for a in range(env.get_num_agents()):
-            agent_obs[a] = agent_obs[a] = normalize_observation(obs[a], observation_radius=10)
+            agent_obs[a] = normalize_observation(obs[a], observation_radius=10)
 
         # Reset score and done
         score = 0
         env_done = 0
 
-
         # Run episode
         for step in range(max_steps):
-
             # Action
             for a in range(env.get_num_agents()):
-                if env.agents[a].speed_data['position_fraction'] == 0.:
+                if env.agents[a].speed_data['position_fraction'] < 0.001:
                     register_action_state[a] = True
                 else:
                     register_action_state[a] = False
@@ -166,7 +159,6 @@ def main(argv):
 
             # Copy observation
             agent_obs = agent_next_obs.copy()
-
             if done['__all__']:
                 env_done = 1
                 for a in range(env.get_num_agents()):
@@ -206,52 +198,6 @@ def main(argv):
                        './Nets/navigator_checkpoint' + str(trials) + '.pth')
             action_prob = [1] * action_size
 
-    # Render the trained agent
-
-    # Reset environment
-    obs = env.reset(True, True)
-    env_renderer.set_new_rail()
-
-    # Split the observation tree into its parts and normalize the observation using the utility functions.
-    # Build agent specific local observation
-    for a in range(env.get_num_agents()):
-        rail_data, distance_data, agent_data = split_tree(tree=np.array(obs[a]),
-                                                          num_features_per_node=num_features_per_node,
-                                                          current_depth=0)
-        rail_data = norm_obs_clip(rail_data)
-        distance_data = norm_obs_clip(distance_data)
-        agent_data = np.clip(agent_data, -1, 1)
-        agent_obs[a] = np.concatenate((np.concatenate((rail_data, distance_data)), agent_data))
-
-    # Reset score and done
-    score = 0
-    env_done = 0
-
-    # Run episode
-    for step in range(max_steps):
-        env_renderer.render_env(show=True, show_observations=False)
-
-        # Chose the actions
-        for a in range(env.get_num_agents()):
-            eps = 0
-            action = agent.act(agent_obs[a], eps=eps)
-            action_dict.update({a: action})
-
-        # Environment step
-        next_obs, all_rewards, done, _ = env.step(action_dict)
-
-        for a in range(env.get_num_agents()):
-            rail_data, distance_data, agent_data = split_tree(tree=np.array(next_obs[a]),
-                                                              num_features_per_node=num_features_per_node,
-                                                              current_depth=0)
-            rail_data = norm_obs_clip(rail_data)
-            distance_data = norm_obs_clip(distance_data)
-            agent_data = np.clip(agent_data, -1, 1)
-            agent_next_obs[a] = np.concatenate((np.concatenate((rail_data, distance_data)), agent_data))
-
-        agent_obs = agent_next_obs.copy()
-        if done['__all__']:
-            break
     # Plot overall training progress at the end
     plt.plot(scores)
     plt.show()

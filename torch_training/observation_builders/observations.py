@@ -346,7 +346,7 @@ class TreeObsForRailEnv(ObservationBuilder):
         unusable_switch = np.inf
         other_agent_same_direction = 0
         other_agent_opposite_direction = 0
-        malfunctioning_agent = 0
+        malfunctioning_agent = 0.
         min_fractional_speed = 1.
         num_steps = 1
         while exploring:

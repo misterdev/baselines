@@ -103,7 +103,7 @@ action_prob = [0] * action_size
 agent_obs = [None] * env.get_num_agents()
 agent_next_obs = [None] * env.get_num_agents()
 agent = Agent(state_size, action_size, "FC", 0)
-with path(torch_training.Nets, "navigator_checkpoint1200.pth") as file_in:
+with path(torch_training.Nets, "navigator_checkpoint500.pth") as file_in:
     agent.qnetwork_local.load_state_dict(torch.load(file_in))
 
 record_images = False
@@ -126,14 +126,12 @@ for trials in range(1, n_trials + 1):
 
         # Action
         for a in range(env.get_num_agents()):
-            action = agent.act(agent_obs[a], eps=0)
+            action = agent.act(agent_obs[a], eps=0.)
             action_prob[action] += 1
             action_dict.update({a: action})
-
         # Environment step
         obs, all_rewards, done, _ = env.step(action_dict)
-
-        env_renderer.render_env(show=True, show_predictions=False, show_observations=False)
+        env_renderer.render_env(show=True, show_predictions=True, show_observations=False)
         # Build agent specific observations and normalize
         for a in range(env.get_num_agents()):
             agent_obs[a] = normalize_observation(obs[a], observation_radius=10)
