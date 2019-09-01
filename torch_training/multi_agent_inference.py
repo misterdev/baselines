@@ -10,6 +10,7 @@ from predictors.predictions import ShortestPathPredictorForRailEnv
 import torch_training.Nets
 from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_generators import rail_from_file
+from flatland.envs.schedule_generators import schedule_from_file
 from flatland.utils.rendertools import RenderTool
 from torch_training.dueling_double_dqn import Agent
 from utils.observation_utils import normalize_observation
@@ -24,6 +25,7 @@ file_name = "./railway/simple_avoid.pkl"
 env = RailEnv(width=10,
               height=20,
               rail_generator=rail_from_file(file_name),
+              schedule_generator=schedule_from_file(file_name),
               obs_builder_object=observation_helper)
 x_dim = env.width
 y_dim = env.height
