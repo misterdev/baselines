@@ -20,7 +20,7 @@ double_dqn = True  # If using double dqn algorithm
 input_channels = 5  # Number of Input channels
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-device = torch.device("cpu")
+#device = torch.device("cpu")
 print(device)
 
 

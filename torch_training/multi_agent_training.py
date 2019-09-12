@@ -4,6 +4,11 @@ import random
 import sys
 from collections import deque
 
+# make sure the root path is in system path
+from pathlib import Path
+base_dir = Path(__file__).resolve().parent.parent
+sys.path.append(str(base_dir))
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
