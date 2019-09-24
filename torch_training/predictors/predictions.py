@@ -96,10 +96,10 @@ class ShortestPathPredictorForRailEnv(PredictionBuilder):
         Requires distance_map to extract the shortest path.
 
         Parameters
-        -------
+        ----------
         custom_args: dict
             - distance_map : dict
-        handle : int (optional)
+        handle : int, optional
             Handle of the agent for which to compute the observation vector.
 
         Returns
