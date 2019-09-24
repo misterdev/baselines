@@ -4,6 +4,11 @@ import random
 import sys
 from collections import deque
 
+# make sure the root path is in system path
+from pathlib import Path
+base_dir = Path(__file__).resolve().parent.parent
+sys.path.append(str(base_dir))
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -14,9 +19,9 @@ import torch_training.Nets
 from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.predictions import ShortestPathPredictorForRailEnv
 from flatland.envs.rail_env import RailEnv
-from flatland.envs.rail_generators import complex_rail_generator
+from flatland.envs.rail_generators import sparse_rail_generator
 # Import Flatland/ Observations and Predictors
-from flatland.envs.schedule_generators import complex_schedule_generator
+from flatland.envs.schedule_generators import sparse_schedule_generator
 from torch_training.dueling_double_dqn import Agent
 from utils.observation_utils import normalize_observation
 
@@ -36,30 +41,55 @@ def main(argv):
     np.random.seed(1)
 
     # Initialize a random map with a random number of agents
-    x_dim = np.random.randint(8, 15)
-    y_dim = np.random.randint(8, 15)
-    n_agents = np.random.randint(3, 8)
-    n_goals = n_agents + np.random.randint(0, 3)
-    min_dist = int(0.75 * min(x_dim, y_dim))
-    tree_depth = 3
-    print("main2")
 
     """
      Get an observation builder and predictor:
      The predictor will always predict the shortest path from the current location of the agent.
      This is used to warn for potential conflicts --> Should be enhanced to get better performance!
     """
+
+    # Parameters for the Environment
+    x_dim = 20
+    y_dim = 20
+    n_agents = 3
+    tree_depth = 2
+
+    # Use a the malfunction generator to break agents from time to time
+    stochastic_data = {'prop_malfunction': 0.1,  # Percentage of defective agents
+                       'malfunction_rate': 30,  # Rate of malfunction occurence
+                       'min_duration': 3,  # Minimal duration of malfunction
+                       'max_duration': 20  # Max duration of malfunction
+                       }
+
+    # Custom observation builder
     predictor = ShortestPathPredictorForRailEnv()
     observation_helper = TreeObsForRailEnv(max_depth=tree_depth, predictor=predictor)
 
+    # Different agent types (trains) with different speeds.
+    speed_ration_map = {1.: 0.25,  # Fast passenger train
+                        1. / 2.: 0.25,  # Fast freight train
+                        1. / 3.: 0.25,  # Slow commuter train
+                        1. / 4.: 0.25}  # Slow freight train
+
     env = RailEnv(width=x_dim,
                   height=y_dim,
-                  rail_generator=complex_rail_generator(nr_start_goal=n_goals, nr_extra=2, min_dist=min_dist,
-                                                        max_dist=99999,
-                                                        seed=0),
-                  schedule_generator=complex_schedule_generator(),
-                  obs_builder_object=observation_helper,
-                  number_of_agents=n_agents)
+                  rail_generator=sparse_rail_generator(num_cities=5,
+                                                       # Number of cities in map (where train stations are)
+                                                       num_intersections=4,
+                                                       # Number of intersections (no start / target)
+                                                       num_trainstations=10,  # Number of possible start/targets on map
+                                                       min_node_dist=3,  # Minimal distance of nodes
+                                                       node_radius=2,  # Proximity of stations to city center
+                                                       num_neighb=3,
+                                                       # Number of connections to other cities/intersections
+                                                       seed=15,  # Random seed
+                                                       grid_mode=True,
+                                                       enhance_intersection=False
+                                                       ),
+                  schedule_generator=sparse_schedule_generator(speed_ration_map),
+                  number_of_agents=n_agents,
+                  stochastic_data=stochastic_data,  # Malfunction data generator
+                  obs_builder_object=observation_helper)
     env.reset(True, True)
 
     handle = env.get_agent_handles()
@@ -105,19 +135,26 @@ def main(argv):
         and the size of the levels every 50 episodes.
         """
         if episodes % 50 == 1:
-            x_dim = np.random.randint(8, 15)
-            y_dim = np.random.randint(8, 15)
-            n_agents = np.random.randint(3, 8)
-            n_goals = n_agents + np.random.randint(0, 3)
-            min_dist = int(0.75 * min(x_dim, y_dim))
             env = RailEnv(width=x_dim,
                           height=y_dim,
-                          rail_generator=complex_rail_generator(nr_start_goal=n_goals, nr_extra=2, min_dist=min_dist,
-                                                                max_dist=99999,
-                                                                seed=0),
-                          schedule_generator=complex_schedule_generator(),
-                          obs_builder_object=observation_helper,
-                          number_of_agents=n_agents)
+                          rail_generator=sparse_rail_generator(num_cities=5,
+                                                               # Number of cities in map (where train stations are)
+                                                               num_intersections=4,
+                                                               # Number of intersections (no start / target)
+                                                               num_trainstations=10,
+                                                               # Number of possible start/targets on map
+                                                               min_node_dist=3,  # Minimal distance of nodes
+                                                               node_radius=2,  # Proximity of stations to city center
+                                                               num_neighb=3,
+                                                               # Number of connections to other cities/intersections
+                                                               seed=15,  # Random seed
+                                                               grid_mode=True,
+                                                               enhance_intersection=False
+                                                               ),
+                          schedule_generator=sparse_schedule_generator(speed_ration_map),
+                          number_of_agents=n_agents,
+                          stochastic_data=stochastic_data,  # Malfunction data generator
+                          obs_builder_object=observation_helper)
 
             # Adjust the parameters according to the new env.
             max_steps = int((env.height + env.width))
@@ -131,6 +168,7 @@ def main(argv):
         # different times during an episode
         final_obs = agent_obs.copy()
         final_obs_next = agent_next_obs.copy()
+        register_action_state = np.zeros(env.get_num_agents(), dtype=bool)
 
         # Build agent specific observations
         for a in range(env.get_num_agents()):
@@ -143,6 +181,10 @@ def main(argv):
 
             # Action
             for a in range(env.get_num_agents()):
+                if env.agents[a].speed_data['position_fraction'] == 0.:
+                    register_action_state[a] = True
+                else:
+                    register_action_state[a] = False
                 action = agent.act(agent_obs[a], eps=eps)
                 action_prob[action] += 1
                 action_dict.update({a: action})
@@ -160,7 +202,7 @@ def main(argv):
                     final_obs[a] = agent_obs[a].copy()
                     final_obs_next[a] = agent_next_obs[a].copy()
                     final_action_dict.update({a: action_dict[a]})
-                if not done[a]:
+                if not done[a] and register_action_state[a]:
                     agent.step(agent_obs[a], action_dict[a], all_rewards[a], agent_next_obs[a], done[a])
                 score += all_rewards[a] / env.get_num_agents()
 

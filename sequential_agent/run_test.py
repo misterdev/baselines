@@ -66,9 +66,9 @@ for trials in range(1, n_trials + 1):
         for a in range(env.get_num_agents()):
             if done[a]:
                 acting_agent += 1
-                print(acting_agent)
             if a == acting_agent:
                 action = agent.act(obs[a], eps=0)
+                print(action)
             else:
                 action = 4
             action_dict.update({a: action})

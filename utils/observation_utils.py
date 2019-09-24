@@ -45,6 +45,8 @@ def norm_obs_clip(obs, clip_min=-1, clip_max=1, fixed_radius=0, normalize_to_ran
     min_obs = 0  # min(max_obs, min_gt(obs, 0))
     if normalize_to_range:
         min_obs = min_gt(obs, 0)
+    if min_obs > max_obs:
+        min_obs = max_obs
     if max_obs == min_obs:
         return np.clip(np.array(obs) / max_obs, clip_min, clip_max)
     norm = np.abs(max_obs - min_obs)
@@ -95,9 +97,11 @@ def split_tree(tree, num_features_per_node, current_depth=0):
             tree_data.extend(tmp_tree_data)
             distance_data.extend(tmp_distance_data)
             agent_data.extend(tmp_agent_data)
+
     return tree_data, distance_data, agent_data
 
-def normalize_observation(observation, num_features_per_node=9, observation_radius=0):
+
+def normalize_observation(observation, num_features_per_node=11, observation_radius=0):
     data, distance, agent_data = split_tree(tree=np.array(observation), num_features_per_node=num_features_per_node,
                                             current_depth=0)
     data = norm_obs_clip(data, fixed_radius=observation_radius)

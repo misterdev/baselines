@@ -9,44 +9,58 @@ from predictors.predictions import ShortestPathPredictorForRailEnv
 
 import torch_training.Nets
 from flatland.envs.rail_env import RailEnv
-from flatland.envs.rail_generators import rail_from_file
+from flatland.envs.rail_generators import rail_from_file, sparse_rail_generator
+from flatland.envs.schedule_generators import schedule_from_file, sparse_schedule_generator
+
 from flatland.utils.rendertools import RenderTool
 from torch_training.dueling_double_dqn import Agent
 from utils.observation_utils import normalize_observation
 
 random.seed(3)
 np.random.seed(2)
+# Parameters for the Environment
+x_dim = 20
+y_dim = 20
+n_agents = 5
+tree_depth = 2
 
-tree_depth = 3
-observation_helper = TreeObsForRailEnv(max_depth=tree_depth, predictor=ShortestPathPredictorForRailEnv(10))
+# Use a the malfunction generator to break agents from time to time
+stochastic_data = {'prop_malfunction': 0.1,  # Percentage of defective agents
+                   'malfunction_rate': 30,  # Rate of malfunction occurence
+                   'min_duration': 3,  # Minimal duration of malfunction
+                   'max_duration': 20  # Max duration of malfunction
+                   }
 
-file_name = "./railway/simple_avoid.pkl"
-env = RailEnv(width=10,
-              height=20,
-              rail_generator=rail_from_file(file_name),
-              obs_builder_object=observation_helper)
-x_dim = env.width
-y_dim = env.height
+# Custom observation builder
+predictor = ShortestPathPredictorForRailEnv()
+observation_helper = TreeObsForRailEnv(max_depth=tree_depth, predictor=predictor)
 
-"""
-
-x_dim = 10  # np.random.randint(8, 20)
-y_dim = 10  # np.random.randint(8, 20)
-n_agents = 5  # np.random.randint(3, 8)
-n_goals = n_agents + np.random.randint(0, 3)
-min_dist = int(0.75 * min(x_dim, y_dim))
+# Different agent types (trains) with different speeds.
+speed_ration_map = {1.: 0.25,  # Fast passenger train
+                    1. / 2.: 0.25,  # Fast freight train
+                    1. / 3.: 0.25,  # Slow commuter train
+                    1. / 4.: 0.25}  # Slow freight train
 
 env = RailEnv(width=x_dim,
               height=y_dim,
-              rail_generator=complex_rail_generator(nr_start_goal=n_goals, nr_extra=2, min_dist=min_dist,
-                                                    max_dist=99999,
-                                                    seed=0),
-              schedule_generator=complex_schedule_generator(),
-              obs_builder_object=observation_helper,
-              number_of_agents=n_agents)
+              rail_generator=sparse_rail_generator(num_cities=5,
+                                                   # Number of cities in map (where train stations are)
+                                                   num_intersections=4,
+                                                   # Number of intersections (no start / target)
+                                                   num_trainstations=10,  # Number of possible start/targets on map
+                                                   min_node_dist=3,  # Minimal distance of nodes
+                                                   node_radius=2,  # Proximity of stations to city center
+                                                   num_neighb=3,
+                                                   # Number of connections to other cities/intersections
+                                                   seed=15,  # Random seed
+                                                   grid_mode=True,
+                                                   enhance_intersection=False
+                                                   ),
+              schedule_generator=sparse_schedule_generator(speed_ration_map),
+              number_of_agents=n_agents,
+              stochastic_data=stochastic_data,  # Malfunction data generator
+              obs_builder_object=observation_helper)
 env.reset(True, True)
-
-"""
 
 env_renderer = RenderTool(env, gl="PILSVG", )
 handle = env.get_agent_handles()
@@ -74,7 +88,7 @@ action_prob = [0] * action_size
 agent_obs = [None] * env.get_num_agents()
 agent_next_obs = [None] * env.get_num_agents()
 agent = Agent(state_size, action_size, "FC", 0)
-with path(torch_training.Nets, "avoid_checkpoint60000.pth") as file_in:
+with path(torch_training.Nets, "avoid_checkpoint100.pth") as file_in:
     agent.qnetwork_local.load_state_dict(torch.load(file_in))
 
 record_images = False

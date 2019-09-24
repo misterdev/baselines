@@ -12,7 +12,7 @@ class OrderedAgent:
         :param state: input is the observation of the agent
         :return: returns an action
         """
-        _, distance, _ = split_tree(tree=np.array(state), num_features_per_node=9,
+        _, distance, _ = split_tree(tree=np.array(state), num_features_per_node=11,
                                     current_depth=0)
         distance = distance[1:]
         min_dist = min_gt(distance, 0)
