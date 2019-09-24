@@ -8,6 +8,7 @@ from flatland.core.env_prediction_builder import PredictionBuilder
 from flatland.core.grid.grid4_utils import get_new_position
 from flatland.envs.rail_env import RailEnvActions
 
+
 class ShortestPathPredictorForRailEnv(PredictionBuilder):
     """
     ShortestPathPredictorForRailEnv object.
@@ -25,10 +26,10 @@ class ShortestPathPredictorForRailEnv(PredictionBuilder):
         Requires distance_map to extract the shortest path.
 
         Parameters
-        -------
+        ----------
         custom_args: dict
             - distance_map : dict
-        handle : int (optional)
+        handle : int, optional
             Handle of the agent for which to compute the observation vector.
 
         Returns
