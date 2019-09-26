@@ -2,8 +2,7 @@ from setuptools import setup, find_packages
 
 install_reqs = []
 dependency_links = []
-# TODO: include requirements_RLLib_training.txt
-requirements_paths = ['requirements_torch_training.txt']  # , 'requirements_RLLib_training.txt']
+requirements_paths = ['requirements_torch_training.txt']
 for requirements_path in requirements_paths:
     with open(requirements_path, 'r') as f:
         install_reqs += [
