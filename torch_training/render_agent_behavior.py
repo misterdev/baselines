@@ -101,7 +101,7 @@ dones_list = []
 action_prob = [0] * action_size
 agent_obs = [None] * env.get_num_agents()
 agent_next_obs = [None] * env.get_num_agents()
-agent = Agent(state_size, action_size, "FC", 0)
+agent = Agent(state_size, action_size, 0)
 with path(torch_training.Nets, "navigator_checkpoint10700.pth") as file_in:
     agent.qnetwork_local.load_state_dict(torch.load(file_in))
 

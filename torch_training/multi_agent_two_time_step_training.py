@@ -43,10 +43,10 @@ def main(argv):
     min_dist = int(0.75 * min(x_dim, y_dim))
     tree_depth = 3
     print("main2")
+    demo = False
 
     # Get an observation builder and predictor
-    predictor = ShortestPathPredictorForRailEnv()
-    observation_helper = TreeObsForRailEnv(max_depth=tree_depth, predictor=predictor())
+    observation_helper = TreeObsForRailEnv(max_depth=tree_depth, predictor=ShortestPathPredictorForRailEnv())
 
     env = RailEnv(width=x_dim,
                   height=y_dim,
@@ -87,7 +87,7 @@ def main(argv):
     agent_obs = [None] * env.get_num_agents()
     agent_next_obs = [None] * env.get_num_agents()
     # Initialize the agent
-    agent = Agent(state_size, action_size, "FC", 0)
+    agent = Agent(state_size, action_size, 0)
 
     # Here you can pre-load an agent
     if False:
@@ -132,6 +132,7 @@ def main(argv):
         # Build agent specific observations
         for a in range(env.get_num_agents()):
             data, distance, agent_data = split_tree(tree=np.array(obs[a]),
+                                                    num_features_per_node=11,
                                                     current_depth=0)
             data = norm_obs_clip(data)
             distance = norm_obs_clip(distance)

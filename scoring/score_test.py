@@ -28,7 +28,7 @@ test_dones = []
 sequential_agent_test = False
 
 # Load your agent
-agent = Agent(state_size, action_size, "FC", 0)
+agent = Agent(state_size, action_size, 0)
 agent.qnetwork_local.load_state_dict(torch.load('../torch_training/Nets/avoid_checkpoint60000.pth'))
 
 # Load the necessary Observation Builder and Predictor

@@ -8,7 +8,7 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 
-from torch_training.model import QNetwork, QNetwork2
+from torch_training.model import QNetwork
 
 BUFFER_SIZE = int(1e5)  # replay buffer size
 BATCH_SIZE = 512  # minibatch size
@@ -27,7 +27,7 @@ print(device)
 class Agent:
     """Interacts with and learns from the environment."""
 
-    def __init__(self, state_size, action_size, net_type, seed, double_dqn=True, input_channels=5):
+    def __init__(self, state_size, action_size, seed, double_dqn=True, input_channels=5):
         """Initialize an Agent object.
 
         Params
@@ -39,15 +39,10 @@ class Agent:
         self.state_size = state_size
         self.action_size = action_size
         self.seed = random.seed(seed)
-        self.version = net_type
         self.double_dqn = double_dqn
         # Q-Network
-        if self.version == "Conv":
-            self.qnetwork_local = QNetwork2(state_size, action_size, seed, input_channels).to(device)
-            self.qnetwork_target = copy.deepcopy(self.qnetwork_local)
-        else:
-            self.qnetwork_local = QNetwork(state_size, action_size, seed).to(device)
-            self.qnetwork_target = copy.deepcopy(self.qnetwork_local)
+        self.qnetwork_local = QNetwork(state_size, action_size, seed).to(device)
+        self.qnetwork_target = copy.deepcopy(self.qnetwork_local)
 
         self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=LR)
 

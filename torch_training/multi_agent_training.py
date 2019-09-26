@@ -121,7 +121,7 @@ def main(argv):
     observation_radius = 10
 
     # Initialize the agent
-    agent = Agent(state_size, action_size, "FC", 0)
+    agent = Agent(state_size, action_size, 0)
 
     # Here you can pre-load an agent
     if False:

@@ -4,8 +4,8 @@ from collections import deque
 import numpy as np
 import torch
 from importlib_resources import path
-from observation_builders.observations import TreeObsForRailEnv
-from predictors.predictions import ShortestPathPredictorForRailEnv
+from flatland.envs.observations import TreeObsForRailEnv
+from flatland.envs.predictions import ShortestPathPredictorForRailEnv
 
 import torch_training.Nets
 from flatland.envs.rail_env import RailEnv
@@ -87,7 +87,7 @@ dones_list = []
 action_prob = [0] * action_size
 agent_obs = [None] * env.get_num_agents()
 agent_next_obs = [None] * env.get_num_agents()
-agent = Agent(state_size, action_size, "FC", 0)
+agent = Agent(state_size, action_size, 0)
 with path(torch_training.Nets, "avoid_checkpoint100.pth") as file_in:
     agent.qnetwork_local.load_state_dict(torch.load(file_in))
 
