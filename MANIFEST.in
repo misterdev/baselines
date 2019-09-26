@@ -1,8 +1,8 @@
-include AUTHORS.rst
+include AUTHORS.md
 include CONTRIBUTING.rst
-include HISTORY.rst
+include changelog.md
 include LICENSE
-include README.rst
+include README.md
 include requirements_torch_training.txt
 include requirements_RLLib_training.txt
 
@@ -12,4 +12,4 @@ recursive-include tests *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 
-recursive-include docs *.rst *.md conf.py Makefile make.bat *.jpg *.png *.gif
+recursive-include docs *.rst *.md conf.py *.jpg *.png *.gif
