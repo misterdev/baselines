@@ -20,9 +20,6 @@ nr_trials_per_test = 100
 test_results = []
 test_times = []
 test_dones = []
-# Load agent
-# agent = Agent(state_size, action_size, "FC", 0)
-# agent.qnetwork_local.load_state_dict(torch.load('./torch_training/Nets/avoid_checkpoint1700.pth'))
 agent = RandomAgent(state_size, action_size)
 start_time_scoring = time.time()
 test_idx = 0

@@ -11,7 +11,7 @@ sys.path.append(str(base_dir))
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from dueling_double_dqn import Agent
+from torch_training.dueling_double_dqn import Agent
 
 from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.rail_env import RailEnv
@@ -117,7 +117,7 @@ def main(argv):
     cummulated_reward = np.zeros(env.get_num_agents())
 
     # Now we load a Double dueling DQN agent
-    agent = Agent(state_size, action_size, "FC", 0)
+    agent = Agent(state_size, action_size)
 
     for trials in range(1, n_trials + 1):
 

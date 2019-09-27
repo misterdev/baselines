@@ -15,9 +15,6 @@ With the above introductions you will solve tasks like these and even more...
 ![Conflict_Avoidance](https://i.imgur.com/AvBHKaD.gif)
 
 
-# RLLib Training
-The `RLLib_training` folder shows an example of how to train agents with  algorithm from implemented in the RLLib library available at: <https://github.com/ray-project/ray/tree/master/python/ray/rllib>
-
 # Sequential Agent
 This is a very simple baseline to show you have the `complex_level_generator` generates feasible network configurations.
 If you run the `run_test.py` file you will see a simple agent that solves the level by sequentially running each agent along its shortest path.
