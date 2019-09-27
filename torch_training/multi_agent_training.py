@@ -121,11 +121,11 @@ def main(argv):
     observation_radius = 10
 
     # Initialize the agent
-    agent = Agent(state_size, action_size, 0)
+    agent = Agent(state_size, action_size)
 
     # Here you can pre-load an agent
     if False:
-        with path(torch_training.Nets, "avoid_checkpoint2400.pth") as file_in:
+        with path(torch_training.Nets, "avoid_checkpoint500.pth") as file_in:
             agent.qnetwork_local.load_state_dict(torch.load(file_in))
 
     # Do training over n_episodes

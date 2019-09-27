@@ -7,16 +7,16 @@ from collections import deque
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from importlib_resources import path
-
-# Import Torch and utility functions to normalize observation
-import torch_training.Nets
 from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.predictions import ShortestPathPredictorForRailEnv
 from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_generators import complex_rail_generator
 # Import Flatland/ Observations and Predictors
 from flatland.envs.schedule_generators import complex_schedule_generator
+from importlib_resources import path
+
+# Import Torch and utility functions to normalize observation
+import torch_training.Nets
 from torch_training.dueling_double_dqn import Agent
 from utils.observation_utils import norm_obs_clip, split_tree
 
@@ -41,7 +41,7 @@ def main(argv):
     n_agents = np.random.randint(3, 8)
     n_goals = n_agents + np.random.randint(0, 3)
     min_dist = int(0.75 * min(x_dim, y_dim))
-    tree_depth = 3
+    tree_depth = 2
     print("main2")
     demo = False
 
@@ -60,7 +60,6 @@ def main(argv):
 
     handle = env.get_agent_handles()
     features_per_node = env.obs_builder.observation_dim
-    tree_depth = 2
     nr_nodes = 0
     for i in range(tree_depth + 1):
         nr_nodes += np.power(4, i)
@@ -87,11 +86,11 @@ def main(argv):
     agent_obs = [None] * env.get_num_agents()
     agent_next_obs = [None] * env.get_num_agents()
     # Initialize the agent
-    agent = Agent(state_size, action_size, 0)
+    agent = Agent(state_size, action_size)
 
     # Here you can pre-load an agent
     if False:
-        with path(torch_training.Nets, "avoid_checkpoint30000.pth") as file_in:
+        with path(torch_training.Nets, "avoid_checkpoint500.pth") as file_in:
             agent.qnetwork_local.load_state_dict(torch.load(file_in))
 
     # Do training over n_episodes
@@ -132,7 +131,7 @@ def main(argv):
         # Build agent specific observations
         for a in range(env.get_num_agents()):
             data, distance, agent_data = split_tree(tree=np.array(obs[a]),
-                                                    num_features_per_node=11,
+                                                    num_features_per_node=features_per_node,
                                                     current_depth=0)
             data = norm_obs_clip(data)
             distance = norm_obs_clip(distance)
@@ -165,6 +164,7 @@ def main(argv):
             next_obs, all_rewards, done, _ = env.step(action_dict)
             for a in range(env.get_num_agents()):
                 data, distance, agent_data = split_tree(tree=np.array(next_obs[a]),
+                                                        num_features_per_node=features_per_node,
                                                         current_depth=0)
                 data = norm_obs_clip(data)
                 distance = norm_obs_clip(distance)

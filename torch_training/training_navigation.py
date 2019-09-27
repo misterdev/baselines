@@ -117,7 +117,7 @@ def main(argv):
     cummulated_reward = np.zeros(env.get_num_agents())
 
     # Now we load a Double dueling DQN agent
-    agent = Agent(state_size, action_size, "FC", 0)
+    agent = Agent(state_size, action_size)
 
     for trials in range(1, n_trials + 1):
 
