@@ -9,7 +9,7 @@ from flatland.envs.observations import GlobalObsForRailEnv
 from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_generators import complex_rail_generator
 from flatland.envs.schedule_generators import complex_schedule_generator
-from utils.observation_utils import norm_obs_clip, split_tree
+from utils.observation_utils import norm_obs_clip, split_tree_into_feature_groups
 
 
 def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='*'):
@@ -104,8 +104,7 @@ def run_test(parameters, agent, test_nr=0, tree_depth=3):
         lp_reset(True, True)
         obs = env.reset(True, True)
         for a in range(env.get_num_agents()):
-            data, distance, agent_data = split_tree(tree=np.array(obs[a]),
-                                                    current_depth=0)
+            data, distance, agent_data = split_tree_into_feature_groups(obs[a], tree_depth)
             data = norm_obs_clip(data)
             distance = norm_obs_clip(distance)
             agent_data = np.clip(agent_data, -1, 1)
@@ -129,8 +128,7 @@ def run_test(parameters, agent, test_nr=0, tree_depth=3):
             next_obs, all_rewards, done, _ = lp_step(action_dict)
 
             for a in range(env.get_num_agents()):
-                data, distance, agent_data = split_tree(tree=np.array(next_obs[a]),
-                                                        current_depth=0)
+                data, distance, agent_data = split_tree_into_feature_groups(next_obs[a], tree_depth)
                 data = norm_obs_clip(data)
                 distance = norm_obs_clip(distance)
                 agent_data = np.clip(agent_data, -1, 1)

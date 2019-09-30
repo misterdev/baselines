@@ -18,7 +18,7 @@ from importlib_resources import path
 # Import Torch and utility functions to normalize observation
 import torch_training.Nets
 from torch_training.dueling_double_dqn import Agent
-from utils.observation_utils import norm_obs_clip, split_tree
+from utils.observation_utils import norm_obs_clip, split_tree_into_feature_groups
 
 
 def main(argv):
@@ -130,9 +130,7 @@ def main(argv):
 
         # Build agent specific observations
         for a in range(env.get_num_agents()):
-            data, distance, agent_data = split_tree(tree=np.array(obs[a]),
-                                                    num_features_per_node=features_per_node,
-                                                    current_depth=0)
+            data, distance, agent_data = split_tree_into_feature_groups(obs[a], tree_depth)
             data = norm_obs_clip(data)
             distance = norm_obs_clip(distance)
             agent_data = np.clip(agent_data, -1, 1)
@@ -163,9 +161,7 @@ def main(argv):
 
             next_obs, all_rewards, done, _ = env.step(action_dict)
             for a in range(env.get_num_agents()):
-                data, distance, agent_data = split_tree(tree=np.array(next_obs[a]),
-                                                        num_features_per_node=features_per_node,
-                                                        current_depth=0)
+                data, distance, agent_data = split_tree_into_feature_groups(next_obs[a], tree_depth)
                 data = norm_obs_clip(data)
                 distance = norm_obs_clip(distance)
                 agent_data = np.clip(agent_data, -1, 1)
