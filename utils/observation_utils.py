@@ -1,4 +1,5 @@
 import numpy as np
+from flatland.envs.observations import TreeObsForRailEnv
 
 
 def max_lt(seq, val):
@@ -53,57 +54,71 @@ def norm_obs_clip(obs, clip_min=-1, clip_max=1, fixed_radius=0, normalize_to_ran
     return np.clip((np.array(obs) - min_obs) / norm, clip_min, clip_max)
 
 
-def split_tree(tree, num_features_per_node, current_depth=0):
-    """
-    Splits the tree observation into different sub groups that need the same normalization.
-    This is necessary because the tree observation includes two different distance:
-    1. Distance from the agent --> This is measured in cells from current agent location
-    2. Distance to targer --> This is measured as distance from cell to agent target
-    3. Binary data --> Contains information about presence of object --> No normalization necessary
-    Number 1. will depend on the depth and size of the tree search
-    Number 2. will depend on the size of the map and thus the max distance on the map
-    Number 3. Is independent of tree depth and map size and thus must be handled differently
-    Therefore we split the tree into these two classes for better normalization.
-    :param tree: Tree that needs to be split
-    :param num_features_per_node: Features per node ATTENTION! this parameter is vital to correct splitting of the tree.
-    :param current_depth: Keeping track of the current depth in the tree
-    :return: Returns the three different groups of distance and binary values.
-    """
-    if len(tree) < num_features_per_node:
-        return [], [], []
+def _split_node_into_feature_groups(node: TreeObsForRailEnv.Node) -> (np.ndarray, np.ndarray, np.ndarray):
+    data = np.zeros(6)
+    distance = np.zeros(1)
+    agent_data = np.zeros(4)
 
-    depth = 0
-    tmp = len(tree) / num_features_per_node - 1
-    pow4 = 4
-    while tmp > 0:
-        tmp -= pow4
-        depth += 1
-        pow4 *= 4
-    child_size = (len(tree) - num_features_per_node) // 4
-    """
-    Here we split the node features into the different classes of distances and binary values.
-    Pay close attention to this part if you modify any of the features in the tree observation.
-    """
-    tree_data = tree[:6].tolist()
-    distance_data = [tree[6]]
-    agent_data = tree[7:num_features_per_node].tolist()
-    # Split each child of the current node and continue to next depth level
-    for children in range(4):
-        child_tree = tree[(num_features_per_node + children * child_size):
-                          (num_features_per_node + (children + 1) * child_size)]
-        tmp_tree_data, tmp_distance_data, tmp_agent_data = split_tree(child_tree, num_features_per_node,
-                                                                      current_depth=current_depth + 1)
-        if len(tmp_tree_data) > 0:
-            tree_data.extend(tmp_tree_data)
-            distance_data.extend(tmp_distance_data)
-            agent_data.extend(tmp_agent_data)
+    data[0] = node.dist_own_target_encountered
+    data[1] = node.dist_other_target_encountered
+    data[2] = node.dist_other_agent_encountered
+    data[3] = node.dist_potential_conflict
+    data[4] = node.dist_unusable_switch
+    data[5] = node.dist_to_next_branch
 
-    return tree_data, distance_data, agent_data
+    distance[0] = node.dist_min_to_target
+
+    agent_data[0] = node.num_agents_same_direction
+    agent_data[1] = node.num_agents_opposite_direction
+    agent_data[2] = node.num_agents_malfunctioning
+    agent_data[3] = node.speed_min_fractional
+
+    return data, distance, agent_data
 
 
-def normalize_observation(observation, num_features_per_node=11, observation_radius=0):
-    data, distance, agent_data = split_tree(tree=np.array(observation), num_features_per_node=num_features_per_node,
-                                            current_depth=0)
+def _split_subtree_into_feature_groups(node: TreeObsForRailEnv.Node, current_tree_depth: int, max_tree_depth: int) -> (np.ndarray, np.ndarray, np.ndarray):
+
+    if node == -np.inf:
+        remaining_depth = max_tree_depth - current_tree_depth
+        # reference: https://stackoverflow.com/questions/515214/total-number-of-nodes-in-a-tree-data-structure
+        num_remaining_nodes = int((4**(remaining_depth+1) - 1) / (4 - 1))
+        return [-np.inf] * num_remaining_nodes*6, [-np.inf] * num_remaining_nodes, [-np.inf] * num_remaining_nodes*4
+
+    data, distance, agent_data = _split_node_into_feature_groups(node)
+
+    if not node.childs:
+        return data, distance, agent_data
+
+    for direction in TreeObsForRailEnv.tree_explorted_actions_char:
+        sub_data, sub_distance, sub_agent_data = _split_subtree_into_feature_groups(node.childs[direction], current_tree_depth + 1, max_tree_depth)
+        data = np.concatenate((data, sub_data))
+        distance = np.concatenate((distance, sub_distance))
+        agent_data = np.concatenate((agent_data, sub_agent_data))
+
+    return data, distance, agent_data
+
+
+def split_tree_into_feature_groups(tree: TreeObsForRailEnv.Node, max_tree_depth: int) -> (np.ndarray, np.ndarray, np.ndarray):
+    """
+    This function splits the tree into three difference arrays of values
+    """
+    data, distance, agent_data = _split_node_into_feature_groups(tree)
+
+    for direction in TreeObsForRailEnv.tree_explorted_actions_char:
+        sub_data, sub_distance, sub_agent_data = _split_subtree_into_feature_groups(tree.childs[direction], 1, max_tree_depth)
+        data = np.concatenate((data, sub_data))
+        distance = np.concatenate((distance, sub_distance))
+        agent_data = np.concatenate((agent_data, sub_agent_data))
+
+    return data, distance, agent_data
+
+
+def normalize_observation(observation: TreeObsForRailEnv.Node, tree_depth: int, observation_radius=0):
+    """
+    This function normalizes the observation used by the RL algorithm
+    """
+    data, distance, agent_data = split_tree_into_feature_groups(observation, tree_depth)
+
     data = norm_obs_clip(data, fixed_radius=observation_radius)
     distance = norm_obs_clip(distance, normalize_to_range=True)
     agent_data = np.clip(agent_data, -1, 1)

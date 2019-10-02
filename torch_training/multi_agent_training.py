@@ -172,7 +172,7 @@ def main(argv):
 
         # Build agent specific observations
         for a in range(env.get_num_agents()):
-            agent_obs[a] = agent_obs[a] = normalize_observation(obs[a], observation_radius=10)
+            agent_obs[a] = agent_obs[a] = normalize_observation(obs[a], tree_depth, observation_radius=10)
         score = 0
         env_done = 0
 
@@ -194,7 +194,7 @@ def main(argv):
 
             # Build agent specific observations and normalize
             for a in range(env.get_num_agents()):
-                agent_next_obs[a] = normalize_observation(next_obs[a], observation_radius=10)
+                agent_next_obs[a] = normalize_observation(next_obs[a], tree_depth, observation_radius=10)
 
             # Update replay buffer and train agent
             for a in range(env.get_num_agents()):

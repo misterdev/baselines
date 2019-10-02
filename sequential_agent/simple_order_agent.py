@@ -1,5 +1,5 @@
 import numpy as np
-from utils.observation_utils import split_tree, min_gt
+from utils.observation_utils import split_tree_into_feature_groups, min_gt
 
 
 class OrderedAgent:
@@ -12,8 +12,7 @@ class OrderedAgent:
         :param state: input is the observation of the agent
         :return: returns an action
         """
-        _, distance, _ = split_tree(tree=np.array(state), num_features_per_node=11,
-                                    current_depth=0)
+        _, distance, _ = split_tree_into_feature_groups(state, 1)
         distance = distance[1:]
         min_dist = min_gt(distance, 0)
         min_direction = np.where(distance == min_dist)
