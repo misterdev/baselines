@@ -60,7 +60,7 @@ For training purposes the tree is flattend into a single array.
 ## Training
 ### Setting up the environment
 Before you get started with the training make sure that you have [pytorch](https://pytorch.org/get-started/locally/) installed.
-Let us now train a simle double dueling DQN agent to navigate to its target on flatland. We start by importing flatland
+Let us now train a simPle double dueling DQN agent to navigate to its target on flatland. We start by importing flatland
 
 ```
 from flatland.envs.generators import complex_rail_generator
@@ -111,7 +111,7 @@ env_renderer = RenderTool(env, gl="PILSVG", )
 To set up a appropriate agent we need the state and action space sizes. From the discussion above about the tree observation we end up with:
 
 [**Adrian**: I just wonder, why this is not done in seperate method in the the observation: get_state_size, then we don't have to write down much more. And the user don't need to 
-understand anything about the oberservation. I suggest moving this into the obersvation, base ObservationBuilder declare it as an abstract method. ... ] 
+understand anything about the observation. I suggest moving this into the observation, base ObservationBuilder declare it as an abstract method. ... ] 
 
 ```
 # Given the depth of the tree observation and the number of features per node we get the following state_size
@@ -218,7 +218,7 @@ for trials in range(1, n_trials + 1):
     eps = max(eps_end, eps_decay * eps)  # decrease epsilon
 ```
 
-Running the `navigation_training.py` file trains a simple agent to navigate to any random target within the railway network. After running you should see a learning curve similiar to this one:
+Running the `training_navigation.py` file trains a simple agent to navigate to any random target within the railway network. After running you should see a learning curve similiar to this one:
 
 ![Learning_curve](https://i.imgur.com/yVGXpUy.png)
 
