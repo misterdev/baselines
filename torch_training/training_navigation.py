@@ -154,8 +154,6 @@ def main(argv):
             for a in range(env.get_num_agents()):
                 if (agent_obs_buffer[a] is not None and info['action_required'][a] and env.agents[a].status != 3) or \
                         env.agents[a].status == 2:
-                    if all_rewards[a] < -1.:
-                        print("bad")
 
                     agent_delayed_next = agent_obs[a].copy()
                     agent.step(agent_obs_buffer[a], agent_action_buffer[a], all_rewards[a],
