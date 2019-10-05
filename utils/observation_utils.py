@@ -89,7 +89,7 @@ def _split_subtree_into_feature_groups(node: TreeObsForRailEnv.Node, current_tre
     if not node.childs:
         return data, distance, agent_data
 
-    for direction in TreeObsForRailEnv.tree_explorted_actions_char:
+    for direction in TreeObsForRailEnv.tree_explored_actions_char:
         sub_data, sub_distance, sub_agent_data = _split_subtree_into_feature_groups(node.childs[direction], current_tree_depth + 1, max_tree_depth)
         data = np.concatenate((data, sub_data))
         distance = np.concatenate((distance, sub_distance))

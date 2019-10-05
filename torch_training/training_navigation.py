@@ -38,8 +38,7 @@ def main(argv):
     x_dim = 20
     y_dim = 20
     n_agents = 1
-    n_goals = 5
-    min_dist = 5
+
 
     # Use a the malfunction generator to break agents from time to time
     stochastic_data = {'prop_malfunction': 0.0,  # Percentage of defective agents
@@ -149,7 +148,7 @@ def main(argv):
 
             # Build agent specific observations and normalize
             for a in range(env.get_num_agents()):
-                agent_next_obs[a] = normalize_observation(next_obs[a], observation_radius=10)
+                agent_next_obs[a] = normalize_observation(next_obs[a], tree_depth, observation_radius=10)
                 cummulated_reward[a] += all_rewards[a]
 
             # Update replay buffer and train agent
@@ -186,7 +185,7 @@ def main(argv):
         for _idx in range(env.get_num_agents()):
             if done[_idx] == 1:
                 tasks_finished += 1
-        done_window.append(tasks_finished / env.get_num_agents())
+        done_window.append(tasks_finished / max(1, env.get_num_agents()))
         scores_window.append(score / max_steps)  # save most recent score
         scores.append(np.mean(scores_window))
         dones_list.append((np.mean(done_window)))
