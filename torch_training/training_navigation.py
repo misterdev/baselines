@@ -59,19 +59,12 @@ def main(argv):
 
     env = RailEnv(width=x_dim,
                   height=y_dim,
-                  rail_generator=sparse_rail_generator(num_cities=5,
+                  rail_generator=sparse_rail_generator(max_num_cities=3,
                                                        # Number of cities in map (where train stations are)
-                                                       num_intersections=4,
-                                                       # Number of intersections (no start / target)
-                                                       num_trainstations=10,  # Number of possible start/targets on map
-                                                       min_node_dist=3,  # Minimal distance of nodes
-                                                       node_radius=2,  # Proximity of stations to city center
-                                                       num_neighb=3,
-                                                       # Number of connections to other cities/intersections
-                                                       seed=15,  # Random seed
-                                                       grid_mode=True,
-                                                       enhance_intersection=False
-                                                       ),
+                                                       seed=1,  # Random seed
+                                                       grid_mode=False,
+                                                       max_rails_between_cities=2,
+                                                       max_rails_in_city=2),
                   schedule_generator=sparse_schedule_generator(speed_ration_map),
                   number_of_agents=n_agents,
                   stochastic_data=stochastic_data,  # Malfunction data generator
@@ -129,7 +122,7 @@ def main(argv):
 
         # Build agent specific observations
         for a in range(env.get_num_agents()):
-            agent_obs[a] = normalize_observation(obs[a], observation_radius=10)
+            agent_obs[a] = normalize_observation(obs[a], tree_depth, observation_radius=10)
             agent_obs_buffer[a] = agent_obs[a].copy()
 
         # Reset score and done
