@@ -1,11 +1,11 @@
 import numpy as np
-
 from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.predictions import ShortestPathPredictorForRailEnv
 from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_generators import complex_rail_generator
 from flatland.envs.schedule_generators import complex_schedule_generator
 from flatland.utils.rendertools import RenderTool
+
 from sequential_agent.simple_order_agent import OrderedAgent
 
 np.random.seed(2)
@@ -49,7 +49,7 @@ action_dict = dict()
 for trials in range(1, n_trials + 1):
 
     # Reset environment
-    obs = env.reset(True, True)
+    obs, info = env.reset(True, True)
     done = env.dones
     env_renderer.reset()
     frame_step = 0

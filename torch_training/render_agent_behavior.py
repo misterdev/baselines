@@ -3,15 +3,15 @@ from collections import deque
 
 import numpy as np
 import torch
-from importlib_resources import path
-
-import torch_training.Nets
 from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.predictions import ShortestPathPredictorForRailEnv
 from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_generators import sparse_rail_generator
 from flatland.envs.schedule_generators import sparse_schedule_generator
 from flatland.utils.rendertools import RenderTool
+from importlib_resources import path
+
+import torch_training.Nets
 from torch_training.dueling_double_dqn import Agent
 from utils.observation_utils import normalize_observation
 
@@ -111,7 +111,7 @@ frame_step = 0
 for trials in range(1, n_trials + 1):
 
     # Reset environment
-    obs = env.reset(True, True)
+    obs, info = env.reset(True, True)
     env_renderer.reset()
     # Build agent specific observations
     for a in range(env.get_num_agents()):

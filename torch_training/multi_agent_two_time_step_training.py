@@ -121,7 +121,7 @@ def main(argv):
             agent_next_obs = [None] * env.get_num_agents()
 
         # Reset environment
-        obs = env.reset(True, True)
+        obs, info = env.reset(True, True)
 
         # Setup placeholder for finals observation of a single agent. This is necessary because agents terminate at
         # different times during an episode

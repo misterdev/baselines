@@ -3,12 +3,12 @@ import time
 from collections import deque
 
 import numpy as np
-from line_profiler import LineProfiler
-
 from flatland.envs.observations import GlobalObsForRailEnv
 from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_generators import complex_rail_generator
 from flatland.envs.schedule_generators import complex_schedule_generator
+from line_profiler import LineProfiler
+
 from utils.observation_utils import norm_obs_clip, split_tree_into_feature_groups
 
 
@@ -102,7 +102,7 @@ def run_test(parameters, agent, test_nr=0, tree_depth=3):
         # Reset the env
 
         lp_reset(True, True)
-        obs = env.reset(True, True)
+        obs, info = env.reset(True, True)
         for a in range(env.get_num_agents()):
             data, distance, agent_data = split_tree_into_feature_groups(obs[a], tree_depth)
             data = norm_obs_clip(data)

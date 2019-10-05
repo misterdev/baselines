@@ -2,7 +2,6 @@ import random
 import time
 
 import numpy as np
-
 from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.predictions import ShortestPathPredictorForRailEnv
 from flatland.envs.rail_env import RailEnv
@@ -66,7 +65,7 @@ def run_test(parameters, agent, observation_builder=None, observation_wrapper=No
                       number_of_agents=1,
                       )
 
-        obs = env.reset()
+        obs, info = env.reset()
 
         if observation_wrapper is not None:
             for a in range(env.get_num_agents()):
@@ -181,7 +180,7 @@ def run_test_sequential(parameters, agent, test_nr=0, tree_depth=3):
                       number_of_agents=1,
                       )
 
-        obs = env.reset()
+        obs, info = env.reset()
         done = env.dones
         # Run episode
         trial_score = 0

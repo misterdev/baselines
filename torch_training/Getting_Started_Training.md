@@ -150,7 +150,7 @@ We now use the normalized `agent_obs` for our training loop:
 for trials in range(1, n_trials + 1):
 
     # Reset environment
-    obs = env.reset(True, True)
+    obs, info = env.reset(True, True)
     if not Training:
         env_renderer.set_new_rail()
 

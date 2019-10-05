@@ -133,13 +133,11 @@ def main(argv):
             # Action
             for a in range(env.get_num_agents()):
                 if info['action_required'][a]:
-                    register_action_state[a] = True
                     action = agent.act(agent_obs[a], eps=eps)
                     action_prob[action] += 1
                     if step == 0:
                         agent_action_buffer[a] = action
                 else:
-                    register_action_state[a] = False
                     action = 0
                 action_dict.update({a: action})
 
@@ -151,24 +149,21 @@ def main(argv):
                 # Penalize waiting in order to get agent to move
                 if env.agents[a].status == 0:
                     all_rewards[a] -= 1
+
                 agent_next_obs[a] = normalize_observation(next_obs[a], tree_depth, observation_radius=10)
                 cummulated_reward[a] += all_rewards[a]
 
             # Update replay buffer and train agent
             for a in range(env.get_num_agents()):
-                if done[a]:
-                    final_obs[a] = agent_obs_buffer[a]
-                    final_obs_next[a] = agent_next_obs[a].copy()
-                    final_action_dict.update({a: agent_action_buffer[a]})
-                if not done[a]:
-                    if agent_obs_buffer[a] is not None and register_action_state[a]:
-                        agent_delayed_next = agent_obs[a].copy()
-                        agent.step(agent_obs_buffer[a], agent_action_buffer[a], all_rewards[a],
-                                   agent_delayed_next, done[a])
-                        cummulated_reward[a] = 0.
-                    if register_action_state[a]:
-                        agent_obs_buffer[a] = agent_obs[a].copy()
-                        agent_action_buffer[a] = action_dict[a]
+                if (agent_obs_buffer[a] is not None and register_action_state[a] and env.agents[a].status != 3) or \
+                        env.agents[a].status == 2:
+                    agent_delayed_next = agent_obs[a].copy()
+                    agent.step(agent_obs_buffer[a], agent_action_buffer[a], all_rewards[a],
+                               agent_delayed_next, done[a])
+                    cummulated_reward[a] = 0.
+                if info['action_required'][a]:
+                    agent_obs_buffer[a] = agent_obs[a].copy()
+                    agent_action_buffer[a] = action_dict[a]
 
                 score += all_rewards[a] / env.get_num_agents()
 
@@ -176,8 +171,6 @@ def main(argv):
             agent_obs = agent_next_obs.copy()
             if done['__all__']:
                 env_done = 1
-                for a in range(env.get_num_agents()):
-                    agent.step(final_obs[a], final_action_dict[a], all_rewards[a], final_obs_next[a], done[a])
                 break
 
         # Epsilon decay
