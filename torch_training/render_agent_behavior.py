@@ -28,8 +28,8 @@ y_dim = env.height
 """
 
 # Parameters for the Environment
-x_dim = 20
-y_dim = 20
+x_dim = 25
+y_dim = 25
 n_agents = 1
 n_goals = 5
 min_dist = 5
@@ -48,9 +48,9 @@ stochastic_data = {'prop_malfunction': 0.0,  # Percentage of defective agents
 TreeObservation = TreeObsForRailEnv(max_depth=2)
 
 # Different agent types (trains) with different speeds.
-speed_ration_map = {1.: 1.,  # Fast passenger train
+speed_ration_map = {1.: 0.,  # Fast passenger train
                     1. / 2.: 0.0,  # Fast freight train
-                    1. / 3.: 0.0,  # Slow commuter train
+                    1. / 3.: 1.0,  # Slow commuter train
                     1. / 4.: 0.0}  # Slow freight train
 
 env = RailEnv(width=x_dim,
