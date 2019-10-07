@@ -136,7 +136,6 @@ def main(argv):
                 else:
                     update_values = False
                     action = 0
-                    action_prob[action] += 1
                 action_dict.update({a: action})
 
             # Environment step
