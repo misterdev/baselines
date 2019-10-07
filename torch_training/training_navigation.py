@@ -130,6 +130,7 @@ def main(argv):
             # Action
             for a in range(env.get_num_agents()):
                 if info['action_required'][a]:
+                    # If an action is require, we want to store the obs a that step as well as the action
                     update_values = True
                     action = agent.act(agent_obs[a], eps=eps)
                     action_prob[action] += 1
@@ -142,7 +143,7 @@ def main(argv):
             next_obs, all_rewards, done, info = env.step(action_dict)
             # Update replay buffer and train agent
             for a in range(env.get_num_agents()):
-
+                # Only update the values when we are done or when an action was taken and thus relevant information is present
                 if update_values or done[a]:
                     agent.step(agent_obs_buffer[a], agent_action_buffer[a], all_rewards[a],
                                agent_obs[a], done[a])
