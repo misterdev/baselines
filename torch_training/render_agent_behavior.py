@@ -48,9 +48,9 @@ stochastic_data = {'prop_malfunction': 0.0,  # Percentage of defective agents
 TreeObservation = TreeObsForRailEnv(max_depth=2)
 
 # Different agent types (trains) with different speeds.
-speed_ration_map = {1.: 0.,  # Fast passenger train
+speed_ration_map = {1.: 1.,  # Fast passenger train
                     1. / 2.: 0.0,  # Fast freight train
-                    1. / 3.: 1.0,  # Slow commuter train
+                    1. / 3.: 0.0,  # Slow commuter train
                     1. / 4.: 0.0}  # Slow freight train
 
 env = RailEnv(width=x_dim,
@@ -95,7 +95,7 @@ action_prob = [0] * action_size
 agent_obs = [None] * env.get_num_agents()
 agent_next_obs = [None] * env.get_num_agents()
 agent = Agent(state_size, action_size)
-with path(torch_training.Nets, "navigator_checkpoint15000.pth") as file_in:
+with path(torch_training.Nets, "navigator_checkpoint1000.pth") as file_in:
     agent.qnetwork_local.load_state_dict(torch.load(file_in))
 
 record_images = False
