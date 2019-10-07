@@ -30,7 +30,7 @@ y_dim = env.height
 # Parameters for the Environment
 x_dim = 25
 y_dim = 25
-n_agents = 1
+n_agents = 10
 
 # We are training an Agent using the Tree Observation with depth 2
 observation_builder = TreeObsForRailEnv(max_depth=2)
@@ -43,13 +43,13 @@ stochastic_data = {'prop_malfunction': 0.0,  # Percentage of defective agents
                    }
 
 # Custom observation builder
-TreeObservation = TreeObsForRailEnv(max_depth=2)
+TreeObservation = TreeObsForRailEnv(max_depth=2, predictor=ShortestPathPredictorForRailEnv())
 
 # Different agent types (trains) with different speeds.
-speed_ration_map = {1.: 1.,  # Fast passenger train
-                    1. / 2.: 0.0,  # Fast freight train
-                    1. / 3.: 0.0,  # Slow commuter train
-                    1. / 4.: 0.0}  # Slow freight train
+speed_ration_map = {1.: 0.25,  # Fast passenger train
+                    1. / 2.: 0.25,  # Fast freight train
+                    1. / 3.: 0.25,  # Slow commuter train
+                    1. / 4.: 0.25}  # Slow freight train
 
 env = RailEnv(width=x_dim,
               height=y_dim,
@@ -93,7 +93,7 @@ action_prob = [0] * action_size
 agent_obs = [None] * env.get_num_agents()
 agent_next_obs = [None] * env.get_num_agents()
 agent = Agent(state_size, action_size)
-with path(torch_training.Nets, "avoider_checkpoint1000.pth") as file_in:
+with path(torch_training.Nets, "avoider_checkpoint100.pth") as file_in:
     agent.qnetwork_local.load_state_dict(torch.load(file_in))
 
 record_images = False

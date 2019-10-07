@@ -4,7 +4,6 @@ from collections import deque
 import numpy as np
 import torch
 from flatland.envs.observations import TreeObsForRailEnv
-from flatland.envs.predictions import ShortestPathPredictorForRailEnv
 from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_generators import sparse_rail_generator
 from flatland.envs.schedule_generators import sparse_schedule_generator
@@ -67,7 +66,6 @@ env = RailEnv(width=x_dim,
               obs_builder_object=TreeObservation)
 env.reset(True, True)
 
-observation_helper = TreeObsForRailEnv(max_depth=3, predictor=ShortestPathPredictorForRailEnv())
 env_renderer = RenderTool(env, gl="PILSVG", )
 num_features_per_node = env.obs_builder.observation_dim
 

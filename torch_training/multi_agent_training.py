@@ -14,6 +14,8 @@ import torch
 from torch_training.dueling_double_dqn import Agent
 
 from flatland.envs.observations import TreeObsForRailEnv
+from flatland.envs.predictions import ShortestPathPredictorForRailEnv
+
 from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_generators import sparse_rail_generator
 from flatland.envs.schedule_generators import sparse_schedule_generator
@@ -48,7 +50,7 @@ def main(argv):
                        }
 
     # Custom observation builder
-    TreeObservation = TreeObsForRailEnv(max_depth=2)
+    TreeObservation = TreeObsForRailEnv(max_depth=2, predictor=ShortestPathPredictorForRailEnv())
 
     # Different agent types (trains) with different speeds.
     speed_ration_map = {1.: 0.25,  # Fast passenger train
