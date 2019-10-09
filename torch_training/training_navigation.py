@@ -13,13 +13,12 @@ import numpy as np
 import torch
 from torch_training.dueling_double_dqn import Agent
 
-flatland.envs.rail_env
-import RailEnv
+from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_generators import sparse_rail_generator
 from flatland.envs.schedule_generators import sparse_schedule_generator
 from flatland.utils.rendertools import RenderTool
 from utils.observation_utils import normalize_observation
-
+from flatland.envs.observations import TreeObsForRailEnv
 
 def main(argv):
     try:
@@ -35,8 +34,8 @@ def main(argv):
     np.random.seed(1)
 
     # Parameters for the Environment
-    x_dim = 30
-    y_dim = 30
+    x_dim = 35
+    y_dim = 35
     n_agents = 1
 
 
