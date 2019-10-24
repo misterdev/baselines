@@ -117,8 +117,9 @@ def main(argv):
         env_renderer.reset()
         # Build agent specific observations
         for a in range(env.get_num_agents()):
-            agent_obs[a] = normalize_observation(obs[a], tree_depth, observation_radius=10)
-            agent_obs_buffer[a] = agent_obs[a].copy()
+            if obs[a]:
+                agent_obs[a] = normalize_observation(obs[a], tree_depth, observation_radius=10)
+                agent_obs_buffer[a] = agent_obs[a].copy()
 
         # Reset score and done
         score = 0
@@ -150,7 +151,8 @@ def main(argv):
 
                     agent_obs_buffer[a] = agent_obs[a].copy()
                     agent_action_buffer[a] = action_dict[a]
-                agent_obs[a] = normalize_observation(next_obs[a], tree_depth, observation_radius=10)
+                if next_obs[a]:
+                    agent_obs[a] = normalize_observation(next_obs[a], tree_depth, observation_radius=10)
 
                 score += all_rewards[a] / env.get_num_agents()
 

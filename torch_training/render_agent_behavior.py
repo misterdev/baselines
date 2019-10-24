@@ -64,7 +64,7 @@ env = RailEnv(width=x_dim,
               number_of_agents=n_agents,
               stochastic_data=stochastic_data,  # Malfunction data generator
               obs_builder_object=TreeObservation)
-env.reset(True, True)
+env.reset()
 
 env_renderer = RenderTool(env, gl="PILSVG", )
 num_features_per_node = env.obs_builder.observation_dim
@@ -126,10 +126,12 @@ for trials in range(1, n_trials + 1):
             action_dict.update({a: action})
         # Environment step
         obs, all_rewards, done, _ = env.step(action_dict)
+
         env_renderer.render_env(show=True, show_predictions=True, show_observations=False)
         # Build agent specific observations and normalize
         for a in range(env.get_num_agents()):
-            agent_obs[a] = normalize_observation(obs[a], tree_depth, observation_radius=10)
+            if obs[a]:
+                agent_obs[a] = normalize_observation(obs[a], tree_depth, observation_radius=10)
 
 
         if done['__all__']:
