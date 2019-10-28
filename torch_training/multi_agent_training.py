@@ -168,8 +168,8 @@ def main(argv):
 
         # Collection information about training
         tasks_finished = 0
-        for agent in env.agents:
-            if agent.status == RailAgentStatus.DONE_REMOVED:
+        for current_agent in env.agents:
+            if current_agent.status == RailAgentStatus.DONE_REMOVED:
                 tasks_finished += 1
         done_window.append(tasks_finished / max(1, env.get_num_agents()))
         scores_window.append(score / max_steps)  # save most recent score
