@@ -2,9 +2,11 @@ import getopt
 import random
 import sys
 from collections import deque
-
 # make sure the root path is in system path
 from pathlib import Path
+
+from flatland.envs.malfunction_generators import malfunction_from_params
+
 base_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(base_dir))
 
@@ -40,10 +42,9 @@ def main(argv):
 
 
     # Use a the malfunction generator to break agents from time to time
-    stochastic_data = {'prop_malfunction': 0.0,  # Percentage of defective agents
-                       'malfunction_rate': 30,  # Rate of malfunction occurence
-                       'min_duration': 3,  # Minimal duration of malfunction
-                       'max_duration': 20  # Max duration of malfunction
+    stochastic_data = {'malfunction_rate': 8000,  # Rate of malfunction occurence of single agent
+                       'min_duration': 15,  # Minimal duration of malfunction
+                       'max_duration': 50  # Max duration of malfunction
                        }
 
     # Custom observation builder
@@ -65,7 +66,8 @@ def main(argv):
                                                        max_rails_in_city=3),
                   schedule_generator=sparse_schedule_generator(speed_ration_map),
                   number_of_agents=n_agents,
-                  stochastic_data=stochastic_data,  # Malfunction data generator
+                  malfunction_generator_and_process_data=malfunction_from_params(stochastic_data),
+                  # Malfunction data generator
                   obs_builder_object=TreeObservation)
 
     # After training we want to render the results so we also load a renderer

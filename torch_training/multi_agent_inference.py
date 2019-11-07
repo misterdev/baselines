@@ -3,6 +3,7 @@ from collections import deque
 
 import numpy as np
 import torch
+from flatland.envs.malfunction_generators import malfunction_from_params
 from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.predictions import ShortestPathPredictorForRailEnv
 from flatland.envs.rail_env import RailEnv
@@ -36,11 +37,11 @@ n_agents = 10
 observation_builder = TreeObsForRailEnv(max_depth=2)
 
 # Use a the malfunction generator to break agents from time to time
-stochastic_data = {'prop_malfunction': 0.0,  # Percentage of defective agents
-                   'malfunction_rate': 30,  # Rate of malfunction occurence
-                   'min_duration': 3,  # Minimal duration of malfunction
-                   'max_duration': 20  # Max duration of malfunction
+stochastic_data = {'malfunction_rate': 8000,  # Rate of malfunction occurence of single agent
+                   'min_duration': 15,  # Minimal duration of malfunction
+                   'max_duration': 50  # Max duration of malfunction
                    }
+
 
 # Custom observation builder
 TreeObservation = TreeObsForRailEnv(max_depth=2, predictor=ShortestPathPredictorForRailEnv())
@@ -61,7 +62,7 @@ env = RailEnv(width=x_dim,
                                                    max_rails_in_city=2),
               schedule_generator=sparse_schedule_generator(speed_ration_map),
               number_of_agents=n_agents,
-              stochastic_data=stochastic_data,  # Malfunction data generator
+              malfunction_generator_and_process_data=malfunction_from_params(stochastic_data),
               obs_builder_object=TreeObservation)
 env.reset(True, True)
 
