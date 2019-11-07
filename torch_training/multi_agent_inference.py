@@ -44,7 +44,7 @@ stochastic_data = {'malfunction_rate': 8000,  # Rate of malfunction occurence of
 
 
 # Custom observation builder
-TreeObservation = TreeObsForRailEnv(max_depth=2, predictor=ShortestPathPredictorForRailEnv())
+TreeObservation = TreeObsForRailEnv(max_depth=2, predictor=ShortestPathPredictorForRailEnv(30))
 
 # Different agent types (trains) with different speeds.
 speed_ration_map = {1.: 0.25,  # Fast passenger train
@@ -80,7 +80,7 @@ action_size = 5
 # We set the number of episodes we would like to train on
 if 'n_trials' not in locals():
     n_trials = 60000
-max_steps = int(3 * (env.height + env.width))
+max_steps = int(4 * 2 * (20 + env.height + env.width))
 eps = 1.
 eps_end = 0.005
 eps_decay = 0.9995
@@ -94,7 +94,7 @@ action_prob = [0] * action_size
 agent_obs = [None] * env.get_num_agents()
 agent_next_obs = [None] * env.get_num_agents()
 agent = Agent(state_size, action_size)
-with path(torch_training.Nets, "avoider_checkpoint100.pth") as file_in:
+with path(torch_training.Nets, "navigator_checkpoint1200.pth") as file_in:
     agent.qnetwork_local.load_state_dict(torch.load(file_in))
 
 record_images = False
@@ -119,7 +119,6 @@ for trials in range(1, n_trials + 1):
         for a in range(env.get_num_agents()):
             if info['action_required'][a]:
                 action = agent.act(agent_obs[a], eps=0.)
-
             else:
                 action = 0
 
@@ -130,7 +129,8 @@ for trials in range(1, n_trials + 1):
         env_renderer.render_env(show=True, show_predictions=True, show_observations=False)
         # Build agent specific observations and normalize
         for a in range(env.get_num_agents()):
-            agent_obs[a] = normalize_observation(obs[a], tree_depth, observation_radius=10)
+            if obs[a]:
+                agent_obs[a] = normalize_observation(obs[a], tree_depth, observation_radius=10)
 
 
         if done['__all__']:
