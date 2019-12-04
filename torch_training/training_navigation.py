@@ -103,11 +103,11 @@ def main(argv):
     scores = []
     dones_list = []
     action_prob = [0] * action_size
-    agent_obs = [None] * env.get_num_agents()
-    agent_next_obs = [None] * env.get_num_agents()
-    agent_obs_buffer = [None] * env.get_num_agents()
-    agent_action_buffer = [2] * env.get_num_agents()
-    cummulated_reward = np.zeros(env.get_num_agents())
+    agent_obs = [None] * n_agents
+    agent_next_obs = [None] * n_agents
+    agent_obs_buffer = [None] * n_agents
+    agent_action_buffer = [2] * n_agents
+    cummulated_reward = np.zeros(n_agents)
     update_values = False
     # Now we load a Double dueling DQN agent
     agent = Agent(state_size, action_size)

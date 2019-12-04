@@ -1,4 +1,5 @@
 *pycache*
 *ppo_policy*
-
+.eggs/
+.vscode/
 torch_training/Nets/
